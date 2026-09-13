@@ -298,6 +298,12 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
   const handleGenerateVisual = async (sugg: VisualSuggestion, styleOverride?: VisualFormatStyle, customPromptText?: string) => {
     const styleToUse = styleOverride || selectedStyle;
     const promptFeedback = customPromptText !== undefined ? customPromptText : (customVisualPrompts[sugg.id] || '');
+
+    if (customPromptText !== undefined && !customPromptText.trim()) {
+      onShowToast('info', '핵심어휘 / 요청사항 입력 필요', '시각자료에 반영할 핵심어휘나 추가 요청사항을 먼저 입력해주세요.');
+      return;
+    }
+
     setGeneratingVisualId(sugg.id);
     try {
       const newVisual = await defaultAiProvider.generateVisual({
@@ -736,23 +742,34 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                   type="text"
                   value={state.teacherRequest || ''}
                   onChange={(e) => setTeacherRequest(e.target.value)}
-                  placeholder="예: 불꽃 축제의 295억 원 경제 효과를 더 강조해서 3개 단락으로 정리해주세요."
+                  placeholder="예: 핵심 어휘(소상공인, 295억 원)를 강조해서 3개 단락으로 정리해주세요."
                   className="input-field px-3 py-2 text-xs flex-1 bg-white font-sans"
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleApplyTeacherCustomRequest();
+                    if (e.key === 'Enter' && state.teacherRequest?.trim()) {
+                      handleApplyTeacherCustomRequest();
+                    }
                   }}
                 />
                 <button
                   type="button"
                   onClick={handleApplyTeacherCustomRequest}
-                  disabled={regeneratingWithTeacherRequest}
-                  className="btn-ai px-3 py-2 text-xs font-extrabold shrink-0 flex items-center gap-1 shadow-2xs"
-                  title="교사 추가 요청사항을 반영하여 AI로 학습지 전체 재구성"
+                  disabled={regeneratingWithTeacherRequest || !state.teacherRequest?.trim()}
+                  className={`px-3 py-2 text-xs font-extrabold shrink-0 flex items-center gap-1 transition-all rounded-lg border ${
+                    !state.teacherRequest?.trim()
+                      ? 'bg-oat-100 text-charcoal-300 border-border opacity-60 cursor-not-allowed'
+                      : 'btn-ai shadow-2xs cursor-pointer'
+                  }`}
+                  title={!state.teacherRequest?.trim() ? '핵심어휘나 세부 요청사항을 입력해야 선택할 수 있습니다.' : '교사 추가 요청사항을 반영하여 AI로 학습지 전체 재구성'}
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${regeneratingWithTeacherRequest ? 'animate-spin' : ''}`} />
                   <span>{regeneratingWithTeacherRequest ? '재구성 중...' : '요청 반영 전체 재구성'}</span>
                 </button>
               </div>
+              {!state.teacherRequest?.trim() && (
+                <p className="text-[10px] text-amber-700 font-medium pt-0.5">
+                  ⚠️ 세부 요청사항이나 핵심어휘를 입력해야 [요청 반영 전체 재구성]을 선택할 수 있습니다.
+                </p>
+              )}
             </div>
 
             {/* Field 1: 자료 제목 */}
@@ -1023,7 +1040,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                           <div className="flex items-center justify-between text-[11px] font-bold text-charcoal-600">
                             <span className="flex items-center gap-1">
                               <Sparkles className="w-3 h-3 text-forest-600" />
-                              <span>교사 추가 요청사항 (선택)</span>
+                              <span>교사 추가 요청사항 (입력 필수)</span>
                             </span>
                             <span className="text-[10px] text-charcoal-400 font-normal">재생성 시 직접 반영</span>
                           </div>
@@ -1035,7 +1052,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                               placeholder="예: 햇빛을 더 밝은 노란색으로 강조해주세요"
                               className="input-field px-2.5 py-1.5 text-xs flex-1"
                               onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
+                                if (e.key === 'Enter' && customVisualPrompts[sugg.id]?.trim()) {
                                   handleGenerateVisual(sugg, selectedStyle, customVisualPrompts[sugg.id]);
                                 }
                               }}
@@ -1043,13 +1060,23 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                             <button
                               type="button"
                               onClick={() => handleGenerateVisual(sugg, selectedStyle, customVisualPrompts[sugg.id])}
-                              disabled={isGenerating}
-                              className="btn-ai px-2.5 py-1.5 text-xs font-bold shrink-0 flex items-center gap-1"
+                              disabled={isGenerating || !customVisualPrompts[sugg.id]?.trim()}
+                              className={`px-2.5 py-1.5 text-xs font-bold shrink-0 flex items-center gap-1 transition-all rounded-lg border ${
+                                !customVisualPrompts[sugg.id]?.trim()
+                                  ? 'bg-oat-100 text-charcoal-300 border-border opacity-60 cursor-not-allowed'
+                                  : 'btn-ai shadow-2xs cursor-pointer'
+                              }`}
+                              title={!customVisualPrompts[sugg.id]?.trim() ? '핵심어휘나 추가 요청사항을 입력해야 선택할 수 있습니다.' : '입력한 지침을 반영하여 시각자료 재생성'}
                             >
                               <RefreshCw className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
                               <span>{isGenerating ? '생성 중...' : '요청 반영 재생성'}</span>
                             </button>
                           </div>
+                          {!customVisualPrompts[sugg.id]?.trim() && (
+                            <p className="text-[10px] text-amber-700 font-medium pt-0.5">
+                              ⚠️ 추가 요청사항이나 핵심어휘를 입력해야 [요청 반영 재생성]을 선택할 수 있습니다.
+                            </p>
+                          )}
                         </div>
 
                         {/* Size Setter Controls */}
