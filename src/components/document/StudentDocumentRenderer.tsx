@@ -56,6 +56,11 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
 
   const getImageHeightClass = (visualId: string) => {
     const sz = imageSizes[visualId] || 'medium';
+    if (isLandscape) {
+      if (sz === 'small') return 'max-h-[110px]';
+      if (sz === 'large') return 'max-h-[200px]';
+      return 'max-h-[145px]';
+    }
     if (sz === 'small') return 'max-h-[180px]';
     if (sz === 'large') return 'max-h-[420px]';
     return 'max-h-[280px]';
@@ -96,23 +101,28 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
 
   const pageStyle: React.CSSProperties = {
     width: isLandscape ? '297mm' : '210mm',
+    height: isLandscape ? '210mm' : '297mm',
     minHeight: isLandscape ? '210mm' : '297mm',
+    maxHeight: isLandscape ? '210mm' : '297mm',
     boxSizing: 'border-box',
     color: '#30342F',
     backgroundColor: '#ffffff',
-    fontFamily: "'Noto Sans KR', 'Malgun Gothic', sans-serif"
+    fontFamily: "'Noto Sans KR', 'Malgun Gothic', sans-serif",
+    overflow: 'hidden'
   };
 
   return (
     <div id={id} className="flex flex-col items-center gap-8 w-full">
       {/* ──────────────── PAGE 1 ──────────────── */}
       <div
-        className="a4-page-sheet bg-white text-charcoal font-sans p-8 sm:p-12 mx-auto border border-border shadow-md flex flex-col justify-between"
+        className={`a4-page-sheet bg-white text-charcoal font-sans mx-auto border border-border shadow-md flex flex-col justify-between ${
+          isLandscape ? 'p-6 sm:p-7' : 'p-8 sm:p-12'
+        }`}
         style={pageStyle}
       >
-        <div className="space-y-6">
+        <div className={isLandscape ? 'space-y-3.5' : 'space-y-6'}>
           {/* Header Banner */}
-          <div className="border-b-2 border-charcoal pb-4 text-center space-y-2">
+          <div className={`border-b-2 border-charcoal text-center ${isLandscape ? 'pb-2 space-y-1' : 'pb-4 space-y-2'}`}>
             <div className="flex items-center justify-between">
               <span className="inline-block px-3 py-1 bg-oat-100 text-charcoal-600 text-xs font-extrabold rounded border border-border">
                 {schoolSubjectHeader}
@@ -121,7 +131,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                 {isTwoPages ? 'A4 1 / 2 페이지' : 'A4 1 / 1 페이지'}
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-charcoal tracking-tight">
+            <h1 className={`${isLandscape ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-extrabold text-charcoal tracking-tight`}>
               {material.title || '학생용 맞춤 학습자료'}
             </h1>
             <p className="text-xs text-charcoal-400 font-medium">
@@ -129,46 +139,49 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
             </p>
           </div>
 
-          {/* 1. 핵심 개념 */}
-          {material.coreConcept && (
-            <div className="space-y-2">
-              <h2 className="text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
-                <span>1. 핵심 개념</span>
-              </h2>
-              <div className="p-4 bg-oat-50 rounded-xl border border-border text-sm font-semibold text-charcoal-600 leading-relaxed">
-                {renderInlineMarkdown(material.coreConcept)}
+          {/* Core Concept & Keywords (Side-by-side in Landscape mode) */}
+          <div className={isLandscape ? 'grid grid-cols-12 gap-3.5' : 'space-y-6'}>
+            {/* 1. 핵심 개념 */}
+            {material.coreConcept && (
+              <div className={`space-y-1.5 ${isLandscape ? 'col-span-7' : ''}`}>
+                <h2 className="text-sm sm:text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
+                  <span>1. 핵심 개념</span>
+                </h2>
+                <div className={`bg-oat-50 rounded-xl border border-border text-xs sm:text-sm font-semibold text-charcoal-600 leading-relaxed ${isLandscape ? 'p-2.5' : 'p-4'}`}>
+                  {renderInlineMarkdown(material.coreConcept)}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* 2. 핵심어 */}
-          {material.keywords && material.keywords.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
-                <span>2. 핵심어</span>
-              </h2>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {material.keywords.map((kw, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1.5 bg-oat-100 text-charcoal text-xs font-bold rounded-lg border border-border"
-                  >
-                    {kw}
-                  </span>
-                ))}
+            {/* 2. 핵심어 */}
+            {material.keywords && material.keywords.length > 0 && (
+              <div className={`space-y-1.5 ${isLandscape ? 'col-span-5' : ''}`}>
+                <h2 className="text-sm sm:text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
+                  <span>2. 핵심어</span>
+                </h2>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {material.keywords.map((kw, i) => (
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 bg-oat-100 text-charcoal text-xs font-bold rounded-lg border border-border"
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* 3. 학습 내용 */}
           {material.simplifiedContent && (
-            <div className="space-y-3">
-              <h2 className="text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
+            <div className="space-y-2">
+              <h2 className="text-sm sm:text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
                 <span>3. 학습 내용</span>
               </h2>
-              <div className="space-y-2 text-sm text-charcoal-600 leading-relaxed font-normal">
-                {formatContentLines(material.simplifiedContent).map((line, idx) => (
-                  <p key={idx} className="my-1">
+              <div className="space-y-1.5 text-xs sm:text-sm text-charcoal-600 leading-relaxed font-normal">
+                {formatContentLines(material.simplifiedContent).slice(0, isLandscape ? 4 : 8).map((line, idx) => (
+                  <p key={idx} className="my-0.5">
                     {renderInlineMarkdown(line)}
                   </p>
                 ))}
@@ -178,11 +191,11 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
 
           {/* 🖼️ 학습 시각자료 섹션 (Page 1 Visuals) */}
           {page1Suggestions.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-charcoal flex items-center gap-1">
+            <div className="space-y-2">
+              <h3 className="text-xs sm:text-sm font-bold text-charcoal flex items-center gap-1">
                 <span>🖼️ 학습 시각자료</span>
               </h3>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-3">
                 {page1Suggestions.map((sugg, idx) => {
                   const visual = (material.visuals || []).find(
                     v => v.suggestionId === sugg.id || (sugg.sectionId && v.sectionId === sugg.sectionId)
@@ -194,7 +207,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                       <div
                         key={visual.id || sugg.id || idx}
                         onClick={() => onSelectVisual?.(sugg.id, visual.id)}
-                        className={`p-4 bg-stone-50 rounded-xl border transition-all relative group ${
+                        className={`p-3 bg-stone-50 rounded-xl border transition-all relative group ${
                           !isExporting ? 'cursor-pointer' : ''
                         } ${
                           isSelected && !isExporting
@@ -230,7 +243,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                             />
                           )}
                         </div>
-                        <p className="text-xs font-bold text-charcoal-600 mt-2 text-center">
+                        <p className="text-[11px] font-bold text-charcoal-600 mt-1.5 text-center">
                           [그림 {idx + 1}] {visual.description || sugg.title}
                         </p>
                       </div>
@@ -242,7 +255,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                       <div
                         key={sugg.id || idx}
                         onClick={() => onSelectVisual?.(sugg.id)}
-                        className={`p-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
+                        className={`p-4 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
                           isSelected
                             ? 'border-forest-500 bg-sage-50 text-forest-800 ring-2 ring-forest-400/40'
                             : 'border-border bg-oat-50/60 hover:bg-sage-50/60 hover:border-forest-400 text-charcoal-400'
@@ -252,7 +265,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                           <Plus className="w-4 h-4 text-forest-600" />
                           <span>+ 이미지 추가 ({sugg.title})</span>
                         </div>
-                        <p className="text-[11px] text-charcoal-400 mt-1">
+                        <p className="text-[11px] text-charcoal-400 mt-0.5">
                           클릭하여 오른쪽 패널에서 AI 생성 또는 이미지 파일 직접 업로드
                         </p>
                       </div>
@@ -269,33 +282,35 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
           {!isTwoPages && (
             <>
               {material.activities && material.activities.length > 0 && (
-                <div className="space-y-4 pt-2">
-                  <h2 className="text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
+                <div className="space-y-3 pt-1">
+                  <h2 className="text-sm sm:text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
                     <span>4. 학습 활동 및 확인 문항</span>
                   </h2>
-                  {material.activities.map((act, idx) => (
-                    <div key={idx} className="p-4 bg-oat-50/80 rounded-xl border border-border space-y-2">
-                      <h3 className="text-sm font-bold text-charcoal">{renderInlineMarkdown(act.title)}</h3>
-                      <div className="text-xs sm:text-sm text-charcoal-600 whitespace-pre-wrap leading-relaxed">
-                        {renderInlineMarkdown(act.content)}
-                      </div>
-                      {act.options && act.options.length > 0 && (
-                        <div className="flex flex-wrap gap-3 pt-2 text-xs font-semibold text-charcoal-600">
-                          {act.options.map((opt, optIdx) => (
-                            <div key={optIdx} className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border">
-                              <span className="w-3.5 h-3.5 rounded border border-charcoal-300 inline-block bg-white"></span>
-                              <span>{opt}</span>
-                            </div>
-                          ))}
+                  <div className={isLandscape ? 'grid grid-cols-1 sm:grid-cols-2 gap-2.5' : 'space-y-3'}>
+                    {material.activities.map((act, idx) => (
+                      <div key={idx} className="p-3 bg-oat-50/80 rounded-xl border border-border space-y-1.5">
+                        <h3 className="text-xs sm:text-sm font-bold text-charcoal">{renderInlineMarkdown(act.title)}</h3>
+                        <div className="text-xs text-charcoal-600 whitespace-pre-wrap leading-relaxed">
+                          {renderInlineMarkdown(act.content)}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {act.options && act.options.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1 text-xs font-semibold text-charcoal-600">
+                            {act.options.map((opt, optIdx) => (
+                              <div key={optIdx} className="flex items-center gap-1 px-2.5 py-1 bg-white rounded-lg border border-border text-[11px]">
+                                <span className="w-3 h-3 rounded border border-charcoal-300 inline-block bg-white"></span>
+                                <span>{opt}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {(material.teacherNote || material.summaryNote) && (
-                <div className="pt-4 border-t-2 border-dashed border-border text-xs text-charcoal-500 space-y-1.5 bg-oat-50 p-4 rounded-xl">
+                <div className="pt-2 border-t-2 border-dashed border-border text-xs text-charcoal-500 space-y-1 bg-oat-50 p-3 rounded-xl">
                   <h4 className="font-bold text-charcoal text-xs flex items-center gap-1">
                     📌 교사용 참고사항 & 정답 안내
                   </h4>
@@ -308,7 +323,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
         </div>
 
         {/* Page 1 Footer */}
-        <div className="pt-6 border-t border-gray-200 text-center text-[11px] text-charcoal-400 font-mono flex items-center justify-between">
+        <div className={`border-t border-gray-200 text-center text-[11px] text-charcoal-400 font-mono flex items-center justify-between ${isLandscape ? 'pt-2' : 'pt-6'}`}>
           <span>udl·bridge 학생용 맞춤 학습지</span>
           <span>- {isTwoPages ? '1 / 2' : '1 / 1'} 페이지 -</span>
         </div>
@@ -325,12 +340,14 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
           )}
 
           <div
-            className="a4-page-sheet bg-white text-charcoal font-sans p-8 sm:p-12 mx-auto border border-border shadow-md flex flex-col justify-between"
+            className={`a4-page-sheet bg-white text-charcoal font-sans mx-auto border border-border shadow-md flex flex-col justify-between ${
+              isLandscape ? 'p-6 sm:p-7' : 'p-8 sm:p-12'
+            }`}
             style={pageStyle}
           >
-            <div className="space-y-6">
+            <div className={isLandscape ? 'space-y-3' : 'space-y-6'}>
               {/* Page 2 Header Banner */}
-              <div className="border-b-2 border-charcoal pb-4 text-center space-y-1.5">
+              <div className={`border-b-2 border-charcoal text-center ${isLandscape ? 'pb-2 space-y-1' : 'pb-4 space-y-1.5'}`}>
                 <div className="flex items-center justify-between">
                   <span className="inline-block px-3 py-1 bg-oat-100 text-charcoal-600 text-xs font-extrabold rounded border border-border">
                     {schoolSubjectHeader} (이어서)
@@ -339,18 +356,18 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                     A4 2 / 2 페이지
                   </span>
                 </div>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-charcoal tracking-tight">
+                <h1 className={`${isLandscape ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} font-extrabold text-charcoal tracking-tight`}>
                   {material.title || '학생용 맞춤 학습자료'} (2/2)
                 </h1>
               </div>
 
               {/* Additional Visuals on Page 2 (if any) */}
               {page2Suggestions.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-charcoal flex items-center gap-1">
+                <div className="space-y-2">
+                  <h3 className="text-xs sm:text-sm font-bold text-charcoal flex items-center gap-1">
                     <span>🖼️ 학습 시각자료 (추가)</span>
                   </h3>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3">
                     {page2Suggestions.map((sugg, idx) => {
                       const visual = (material.visuals || []).find(
                         v => v.suggestionId === sugg.id || (sugg.sectionId && v.sectionId === sugg.sectionId)
@@ -362,7 +379,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                           <div
                             key={visual.id || sugg.id || idx}
                             onClick={() => onSelectVisual?.(sugg.id, visual.id)}
-                            className={`p-4 bg-stone-50 rounded-xl border transition-all relative group ${
+                            className={`p-3 bg-stone-50 rounded-xl border transition-all relative group ${
                               !isExporting ? 'cursor-pointer' : ''
                             } ${
                               isSelected && !isExporting
@@ -398,7 +415,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                                 />
                               )}
                             </div>
-                            <p className="text-xs font-bold text-charcoal-600 mt-2 text-center">
+                            <p className="text-[11px] font-bold text-charcoal-600 mt-1.5 text-center">
                               [그림 {idx + 2}] {visual.description || sugg.title}
                             </p>
                           </div>
@@ -410,7 +427,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                           <div
                             key={sugg.id || idx}
                             onClick={() => onSelectVisual?.(sugg.id)}
-                            className={`p-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
+                            className={`p-4 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all ${
                               isSelected
                                 ? 'border-forest-500 bg-sage-50 text-forest-800 ring-2 ring-forest-400/40'
                                 : 'border-border bg-oat-50/60 hover:bg-sage-50/60 hover:border-forest-400 text-charcoal-400'
@@ -432,39 +449,41 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
 
               {/* 4. 학습 활동 및 확인 문항 */}
               {material.activities && material.activities.length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-base font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
+                <div className="space-y-2">
+                  <h2 className="text-xs sm:text-sm font-bold text-charcoal border-b border-border pb-1 flex items-center gap-1.5">
                     <span>4. 학습 활동 및 확인 문항</span>
                   </h2>
-                  {material.activities.map((act, idx) => (
-                    <div key={idx} className="p-4 bg-oat-50/80 rounded-xl border border-border space-y-2">
-                      <h3 className="text-sm font-bold text-charcoal">{renderInlineMarkdown(act.title)}</h3>
-                      <div className="text-xs sm:text-sm text-charcoal-600 whitespace-pre-wrap leading-relaxed">
-                        {renderInlineMarkdown(act.content)}
-                      </div>
-
-                      {/* Options with check marks */}
-                      {act.options && act.options.length > 0 && (
-                        <div className="flex flex-wrap gap-3 pt-2 text-xs font-semibold text-charcoal-600">
-                          {act.options.map((opt, optIdx) => (
-                            <div
-                              key={optIdx}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border"
-                            >
-                              <span className="w-3.5 h-3.5 rounded border border-charcoal-300 inline-block bg-white"></span>
-                              <span>{opt}</span>
-                            </div>
-                          ))}
+                  <div className={isLandscape ? 'grid grid-cols-1 sm:grid-cols-2 gap-2.5' : 'space-y-3'}>
+                    {material.activities.map((act, idx) => (
+                      <div key={idx} className="p-3 bg-oat-50/80 rounded-xl border border-border space-y-1">
+                        <h3 className="text-xs font-bold text-charcoal">{renderInlineMarkdown(act.title)}</h3>
+                        <div className="text-[11px] sm:text-xs text-charcoal-600 whitespace-pre-wrap leading-relaxed">
+                          {renderInlineMarkdown(act.content)}
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        {/* Options with check marks */}
+                        {act.options && act.options.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1 text-[11px] font-semibold text-charcoal-600">
+                            {act.options.map((opt, optIdx) => (
+                              <div
+                                key={optIdx}
+                                className="flex items-center gap-1 px-2.5 py-1 bg-white rounded-lg border border-border"
+                              >
+                                <span className="w-3 h-3 rounded border border-charcoal-300 inline-block bg-white"></span>
+                                <span>{opt}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* 5. 교사용 정답 및 안내 */}
               {(material.teacherNote || material.summaryNote) && (
-                <div className="pt-4 border-t-2 border-dashed border-border text-xs text-charcoal-500 space-y-1.5 bg-oat-50 p-4 rounded-xl">
+                <div className="pt-2 border-t-2 border-dashed border-border text-[11px] text-charcoal-500 space-y-1 bg-oat-50 p-2.5 rounded-xl">
                   <h4 className="font-bold text-charcoal text-xs flex items-center gap-1">
                     📌 교사용 참고사항 & 정답 안내
                   </h4>
@@ -475,7 +494,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
             </div>
 
             {/* Page 2 Footer */}
-            <div className="pt-6 border-t border-gray-200 text-center text-[11px] text-charcoal-400 font-mono flex items-center justify-between">
+            <div className={`border-t border-gray-200 text-center text-[11px] text-charcoal-400 font-mono flex items-center justify-between ${isLandscape ? 'pt-2' : 'pt-6'}`}>
               <span>udl·bridge 학생용 맞춤 학습지</span>
               <span>- 2 / 2 페이지 -</span>
             </div>
