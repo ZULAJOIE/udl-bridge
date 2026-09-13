@@ -25,50 +25,32 @@ export class PdfExportService implements ExportService {
     const pdfWidth = isLandscape ? 297 : 210; // A4 width in mm
     const pdfHeight = isLandscape ? 210 : 297; // A4 height in mm
 
+    // Find parent scale wrapper (which applies scale() preview zoom in UI)
+    const scaleWrapper = document.getElementById('a4-preview-scale-wrapper');
+    const originalTransform = scaleWrapper ? scaleWrapper.style.transform : '';
+
     // Find all discrete A4 page sheets inside target container
     const pageSheets = Array.from(container.querySelectorAll('.a4-page-sheet')) as HTMLElement[];
     const elementsToCapture = pageSheets.length > 0 ? pageSheets : [container];
 
-    // Create temporary off-screen container outside of any CSS transform hierarchy
-    // This prevents html2canvas from miscalculating font baselines & box heights due to parent scale() transforms
-    const captureHost = document.createElement('div');
-    captureHost.style.position = 'fixed';
-    captureHost.style.left = '-9999px';
-    captureHost.style.top = '0px';
-    captureHost.style.width = isLandscape ? '297mm' : '210mm';
-    captureHost.style.height = 'auto';
-    captureHost.style.zIndex = '-9999';
-    captureHost.style.transform = 'none';
-    captureHost.style.pointerEvents = 'none';
-    document.body.appendChild(captureHost);
-
     try {
+      // Temporarily remove CSS scale transform from live DOM so html2canvas computes exact 1:1 font metrics and layout bounds
+      if (scaleWrapper) {
+        scaleWrapper.style.transform = 'none';
+      }
+
+      // Allow micro-task tick for browser layout engine to update unscaled bounding boxes
+      await new Promise(r => setTimeout(r, 60));
+
       for (let i = 0; i < elementsToCapture.length; i++) {
         const pageEl = elementsToCapture[i];
 
-        // Clone page element to unscaled capture host
-        const clone = pageEl.cloneNode(true) as HTMLElement;
-        clone.style.transform = 'none';
-        clone.style.margin = '0';
-        clone.style.width = isLandscape ? '297mm' : '210mm';
-        clone.style.height = isLandscape ? '210mm' : '297mm';
-        clone.style.maxHeight = isLandscape ? '210mm' : '297mm';
-        clone.style.boxSizing = 'border-box';
-        clone.style.overflow = 'hidden';
-
-        captureHost.appendChild(clone);
-
-        // Allow micro-task tick for fonts & layout to render in cloned DOM
-        await new Promise(r => setTimeout(r, 60));
-
-        const canvas = await html2canvas(clone, {
+        const canvas = await html2canvas(pageEl, {
           scale: 2,
           useCORS: true,
           backgroundColor: '#ffffff',
           logging: false
         });
-
-        captureHost.removeChild(clone);
 
         const imgData = canvas.toDataURL('image/png');
 
@@ -79,8 +61,9 @@ export class PdfExportService implements ExportService {
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       }
     } finally {
-      if (document.body.contains(captureHost)) {
-        document.body.removeChild(captureHost);
+      // Always restore UI zoom scale transform
+      if (scaleWrapper) {
+        scaleWrapper.style.transform = originalTransform;
       }
     }
 

@@ -629,6 +629,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 className="w-full flex justify-center overflow-y-auto max-h-[820px] p-2 transition-all duration-200"
               >
                 <div
+                  id="a4-preview-scale-wrapper"
                   className="origin-top transition-transform duration-200"
                   style={{
                     transform: `scale(${getZoomScale()})`,
