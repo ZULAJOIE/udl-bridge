@@ -20,6 +20,8 @@ async function getImageBufferAndDimensions(
   if (!urlOrData) return null;
 
   return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), 4000);
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
 
@@ -29,6 +31,7 @@ async function getImageBufferAndDimensions(
     }
 
     img.onload = () => {
+      clearTimeout(timer);
       try {
         const naturalWidth = img.naturalWidth || 500;
         const naturalHeight = img.naturalHeight || 300;
@@ -66,7 +69,11 @@ async function getImageBufferAndDimensions(
       }
     };
 
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      clearTimeout(timer);
+      resolve(null);
+    };
+
     img.src = src;
   });
 }
