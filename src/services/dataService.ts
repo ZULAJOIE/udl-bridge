@@ -257,6 +257,8 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
           displayName: data.displayName || '',
           termsAgreed: data.termsAgreed ?? true,
           termsAgreedAt: data.termsAgreedAt,
+          privacyAgreed: data.privacyAgreed ?? true,
+          privacyAgreedAt: data.privacyAgreedAt,
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt,
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate().toISOString() : data.updatedAt
         } as UserProfile;
@@ -288,12 +290,15 @@ export async function saveUserProfile(
   role: 'teacher' | 'admin' = 'teacher',
   status?: AccountStatus,
   termsAgreed: boolean = true,
-  termsAgreedAt?: string
+  termsAgreedAt?: string,
+  privacyAgreed: boolean = true,
+  privacyAgreedAt?: string
 ): Promise<UserProfile> {
   const now = new Date().toISOString();
   // Default new teachers to 'pending' unless admin
   const userStatus: AccountStatus = status || (role === 'admin' ? 'approved' : 'pending');
   const agreedTime = termsAgreedAt || now;
+  const privacyTime = privacyAgreedAt || now;
 
   const profileData: UserProfile = {
     uid,
@@ -305,6 +310,8 @@ export async function saveUserProfile(
     displayName: displayName || '',
     termsAgreed,
     termsAgreedAt: agreedTime,
+    privacyAgreed,
+    privacyAgreedAt: privacyTime,
     createdAt: now,
     updatedAt: now
   };
@@ -322,6 +329,8 @@ export async function saveUserProfile(
         displayName: displayName || '',
         termsAgreed,
         termsAgreedAt: agreedTime,
+        privacyAgreed,
+        privacyAgreedAt: privacyTime,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       }, { merge: true });

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { LogIn, Sparkles, X, AlertCircle } from 'lucide-react';
+import { LogIn, Sparkles, X, AlertCircle, CheckSquare, Square } from 'lucide-react';
 import { LegalModal, LegalTab } from '../common/LegalModal';
 
 interface AuthSelectionModalProps {
@@ -16,20 +16,32 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
 }) => {
   const { loginWithGoogle, loginAnonymously } = useAuth();
   const [loading, setLoading] = useState<'google' | 'anonymous' | null>(null);
+  
+  // Separate consent state for Terms and Privacy Policy
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState<boolean>(false);
   const [showConsentError, setShowConsentError] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
 
   if (!isOpen) return null;
 
+  const allAgreed = agreedToTerms && agreedToPrivacy;
+
+  const handleMasterToggle = () => {
+    const nextState = !allAgreed;
+    setAgreedToTerms(nextState);
+    setAgreedToPrivacy(nextState);
+    if (nextState) setShowConsentError(false);
+  };
+
   const validateConsent = (): boolean => {
-    if (!agreedToTerms) {
+    if (!agreedToTerms || !agreedToPrivacy) {
       setShowConsentError(true);
       if (onShowToast) {
         onShowToast(
           'info',
-          '개인정보 수집·이용 동의 필요',
-          '서비스 이용을 위해 이용약관 및 개인정보처리방침 동의 체크박스에 동의해 주세요.'
+          '약관 및 개인정보 동의 필수',
+          '서비스 이용을 위해 이용약관 및 개인정보처리방침에 모두 동의해 주세요.'
         );
       }
       return false;
@@ -44,7 +56,7 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
     try {
       await loginWithGoogle();
       if (onShowToast) {
-        onShowToast('success', 'Google 로그인 완료', '반갑습니다!');
+        onShowToast('success', 'Google 로그인 완료', '환영합니다!');
       }
       onClose();
     } catch (error) {
@@ -94,70 +106,108 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
           </div>
 
           {/* Titles */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-5">
             <h2 className="text-2xl font-bold text-[#1A3323] tracking-tight mb-2">
               UDL-Bridge 시작하기
             </h2>
-            <p className="text-sm text-charcoal-600 leading-relaxed">
-              로그인하면 만든 자료를 저장하고 다시 사용할 수 있어요.
+            <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
+              로그인하면 만든 자료를 저장하고 언제든 다시 사용할 수 있어요.
             </p>
           </div>
 
-          {/* 필수 개인정보 및 이용약관 동의 체크박스 */}
+          {/* 약관 및 개인정보 필수 동의 영역 (개별 동의 + 전체 동의) */}
           <div
-            className={`p-3.5 rounded-2xl border transition-all mb-6 text-left ${
-              showConsentError && !agreedToTerms
-                ? 'bg-rose-50 border-rose-300 ring-2 ring-rose-200'
-                : 'bg-white border-border'
+            className={`p-4 rounded-2xl border transition-all mb-5 text-left space-y-3 ${
+              showConsentError && (!agreedToTerms || !agreedToPrivacy)
+                ? 'bg-rose-50/90 border-rose-300 ring-2 ring-rose-200'
+                : 'bg-white border-border shadow-2xs'
             }`}
           >
-            <div className="flex items-start gap-2.5">
+            {/* Master Toggle */}
+            <div
+              onClick={handleMasterToggle}
+              className="flex items-center gap-2.5 pb-2.5 border-b border-gray-200 cursor-pointer select-none"
+            >
               <input
                 type="checkbox"
-                id="modal-agree-terms"
-                checked={agreedToTerms}
-                onChange={(e) => {
-                  setAgreedToTerms(e.target.checked);
-                  if (e.target.checked) setShowConsentError(false);
-                }}
-                className="mt-0.5 w-4 h-4 text-[#2D5A3F] border-gray-300 rounded focus:ring-[#2D5A3F] cursor-pointer shrink-0"
+                checked={allAgreed}
+                onChange={handleMasterToggle}
+                className="w-4 h-4 text-[#2D5A3F] border-gray-300 rounded focus:ring-[#2D5A3F] cursor-pointer"
               />
-              <label htmlFor="modal-agree-terms" className="text-xs text-charcoal-700 leading-relaxed cursor-pointer select-none">
-                <span className="font-bold text-[#2D5A3F]">[필수]</span>{' '}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setLegalModalTab('terms');
-                  }}
-                  className="underline font-bold text-[#1A3323] hover:text-[#2D5A3F]"
-                >
-                  이용약관
-                </button>
-                {' '}및{' '}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setLegalModalTab('privacy');
-                  }}
-                  className="underline font-bold text-[#1A3323] hover:text-[#2D5A3F]"
-                >
-                  개인정보처리방침
-                </button>
-                에 동의합니다.
-              </label>
+              <span className="text-xs font-extrabold text-[#1A3323]">
+                이용약관 및 개인정보 처리방침 전체 동의
+              </span>
             </div>
-            {showConsentError && !agreedToTerms && (
-              <p className="text-[11px] font-bold text-rose-600 mt-2 ml-6 flex items-center gap-1">
+
+            {/* Item 1: 이용약관 동의 */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="modal-agree-terms"
+                  checked={agreedToTerms}
+                  onChange={(e) => {
+                    setAgreedToTerms(e.target.checked);
+                    if (e.target.checked && agreedToPrivacy) setShowConsentError(false);
+                  }}
+                  className="w-4 h-4 text-[#2D5A3F] border-gray-300 rounded focus:ring-[#2D5A3F] cursor-pointer shrink-0"
+                />
+                <label htmlFor="modal-agree-terms" className="text-charcoal-700 cursor-pointer select-none font-semibold">
+                  <span className="text-[#2D5A3F] font-bold">[필수]</span> 이용약관 동의
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLegalModalTab('terms');
+                }}
+                className="text-[11px] text-charcoal-500 hover:text-[#2D5A3F] underline font-medium"
+              >
+                [전문 보기]
+              </button>
+            </div>
+
+            {/* Item 2: 개인정보 처리방침 동의 */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="modal-agree-privacy"
+                  checked={agreedToPrivacy}
+                  onChange={(e) => {
+                    setAgreedToPrivacy(e.target.checked);
+                    if (e.target.checked && agreedToTerms) setShowConsentError(false);
+                  }}
+                  className="w-4 h-4 text-[#2D5A3F] border-gray-300 rounded focus:ring-[#2D5A3F] cursor-pointer shrink-0"
+                />
+                <label htmlFor="modal-agree-privacy" className="text-charcoal-700 cursor-pointer select-none font-semibold">
+                  <span className="text-[#2D5A3F] font-bold">[필수]</span> 개인정보 처리방침 동의
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setLegalModalTab('privacy');
+                }}
+                className="text-[11px] text-charcoal-500 hover:text-[#2D5A3F] underline font-medium"
+              >
+                [전문 보기]
+              </button>
+            </div>
+
+            {/* Validation Error Message */}
+            {showConsentError && (!agreedToTerms || !agreedToPrivacy) && (
+              <p className="text-[11px] font-bold text-rose-600 pt-1 flex items-center gap-1">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>계속하시려면 약관 및 개인정보 동의에 체크해 주세요.</span>
+                <span>계속 진행하려면 필수 동의 항목에 모두 체크해 주세요.</span>
               </p>
             )}
           </div>
 
           {/* Login Option Buttons */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-3 mb-5">
             {/* Option 1: Google Login */}
             <button
               onClick={handleGoogleLogin}
@@ -205,7 +255,7 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
           </div>
 
           {/* Helper Disclaimer Note */}
-          <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3.5 flex items-start gap-2.5 text-left">
+          <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 flex items-start gap-2.5 text-left">
             <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-800 leading-relaxed">
               체험 중 만든 자료는 계정을 연결하지 않으면 다른 기기에서 다시 불러오기 어려울 수 있어요.

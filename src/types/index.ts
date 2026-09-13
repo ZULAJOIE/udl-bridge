@@ -32,6 +32,8 @@ export interface UserProfile {
   status?: AccountStatus;
   termsAgreed?: boolean;
   termsAgreedAt?: string;
+  privacyAgreed?: boolean;
+  privacyAgreedAt?: string;
   createdAt: string;
   lastLoginAt?: string;
   updatedAt?: string;
