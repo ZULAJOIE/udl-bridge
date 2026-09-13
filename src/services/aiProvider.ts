@@ -13,9 +13,14 @@ export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
   const disabilityText = input.disabilityCategories && input.disabilityCategories.length > 0 
     ? input.disabilityCategories.join(', ') 
     : '특이사항 없음';
-  const needsText = input.primaryNeeds && input.primaryNeeds.length > 0 
-    ? input.primaryNeeds.join(', ') 
+  const needsText = input.primaryNeeds && input.primaryNeeds.length > 0
+    ? input.primaryNeeds.join(', ')
     : '기본 학습 지원';
+  const strategyPriorityText = input.strategyResolutions && input.strategyResolutions.length > 0
+    ? input.strategyResolutions
+        .map(r => `${r.strategyLabels.join(' / ')} 중 "${r.priorityLabel}"를 우선 적용`)
+        .join('; ')
+    : '';
 
   return `당신은 특수교육 및 UDL(보편적 학습 설계) 기반 교수적 수정 전문가입니다.
 
@@ -34,6 +39,7 @@ export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
 - 선택된 텍스트 수정 전략: ${input.textStrategies.length > 0 ? input.textStrategies.join(', ') : '기본 전략 적용'}
 - 시각자료 수정 Level: Level ${input.visualModificationLevel}
 - 선택된 시각자료 수정 전략: ${input.visualStrategies.length > 0 ? input.visualStrategies.join(', ') : '기본 전략 적용'}
+${strategyPriorityText ? `- 전략 간 우선순위 (교사 지정): ${strategyPriorityText}` : ''}
 
 [4. 반드시 보존할 요소]
 - 보존 항목: ${input.mustKeepOptions.length > 0 ? input.mustKeepOptions.join(', ') : '원래 학습목표, 핵심 개념'}

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import {
-  SchoolLevel, ModificationLevel, MaterialFile, GeneratedMaterial, SavedMaterial, SourceMaterial
+  SchoolLevel, ModificationLevel, MaterialFile, GeneratedMaterial, SavedMaterial, SourceMaterial, StrategyResolution,
+  SupportRecommendationResult
 } from '../types';
 import {
   SUBJECTS_BY_LEVEL,
@@ -30,6 +31,10 @@ interface WizardState {
 
   visualModificationLevel: ModificationLevel;
   visualStrategies: string[];
+
+  // Teacher-resolved priorities between strategies flagged as 'conflicting' when both are selected (Step 3).
+  // UI-only state — not part of SavedMaterial/Firebase schema.
+  strategyResolutions: StrategyResolution[];
 
   mustKeepOptions: string[];
   mustKeepText: string;
@@ -67,6 +72,7 @@ interface WizardContextType {
 
   setVisualModificationLevel: (level: ModificationLevel) => void;
   toggleVisualStrategy: (strategy: string) => void;
+  addStrategyResolution: (resolution: StrategyResolution) => void;
 
   toggleMustKeepOption: (option: string) => void;
   setMustKeepText: (text: string) => void;
@@ -74,6 +80,11 @@ interface WizardContextType {
   setTeacherRequest: (req: string) => void;
 
   triggerRecommendation: (userId?: string) => void;
+  applyRecommendedSupports: (
+    rec: SupportRecommendationResult,
+    rejected: { rejectedTextStrategies: string[]; rejectedVisualStrategies: string[] },
+    userId?: string
+  ) => void;
   generateMaterialAction: (userId?: string) => Promise<GeneratedMaterial>;
   updateGeneratedContent: (updatedResult: GeneratedMaterial) => void;
 
@@ -90,13 +101,14 @@ const INITIAL_STATE: WizardState = {
   sourceMaterials: [],
   pageSize: 'A4',
   pageOrientation: 'portrait',
-  primaryNeeds: ['긴 글 이해', '어려운 단어', '단계적 안내'],
+  primaryNeeds: ['긴 글을 끝까지 읽기 어려워해요', '어려운 단어의 뜻을 이해하기 어려워해요', '여러 단계의 지시를 한 번에 수행하기 어려워해요'],
   detailedNeeds: ['긴 글 이해가 어려움', '어려운 어휘를 이해하기 어려움'],
   disabilityCategories: [],
   textModificationLevel: 3,
   textStrategies: ['긴 문장을 짧게 나누기', '어려운 어휘 쉬운 말 풀이', '핵심 요약 박스 제공'],
   visualModificationLevel: 3,
   visualStrategies: ['중요한 부분 강조', '핵심 요소 라벨'],
+  strategyResolutions: [],
   mustKeepOptions: ['원래 학습목표', '핵심 개념', '필수 교과 어휘'],
   mustKeepText: '',
   teacherRequest: '',
@@ -197,7 +209,11 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const exists = prev.textStrategies.includes(strategy);
       return {
         ...prev,
-        textStrategies: exists ? prev.textStrategies.filter(s => s !== strategy) : [...prev.textStrategies, strategy]
+        textStrategies: exists ? prev.textStrategies.filter(s => s !== strategy) : [...prev.textStrategies, strategy],
+        // Dropping a strategy also drops any priority decision that referenced it
+        strategyResolutions: exists
+          ? prev.strategyResolutions.filter(r => !(r.domain === 'text' && r.strategyLabels.includes(strategy)))
+          : prev.strategyResolutions
       };
     });
   };
@@ -211,9 +227,25 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const exists = prev.visualStrategies.includes(strategy);
       return {
         ...prev,
-        visualStrategies: exists ? prev.visualStrategies.filter(s => s !== strategy) : [...prev.visualStrategies, strategy]
+        visualStrategies: exists ? prev.visualStrategies.filter(s => s !== strategy) : [...prev.visualStrategies, strategy],
+        strategyResolutions: exists
+          ? prev.strategyResolutions.filter(r => !(r.domain === 'visual' && r.strategyLabels.includes(strategy)))
+          : prev.strategyResolutions
       };
     });
+  };
+
+  const addStrategyResolution = (resolution: StrategyResolution) => {
+    setState(prev => ({
+      ...prev,
+      strategyResolutions: [
+        ...prev.strategyResolutions.filter(r => !(
+          r.domain === resolution.domain &&
+          r.strategyLabels.every(l => resolution.strategyLabels.includes(l))
+        )),
+        resolution
+      ]
+    }));
   };
 
   const toggleMustKeepOption = (option: string) => {
@@ -259,6 +291,42 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
+  // STEP 2 "지원 추천받기" review-and-confirm flow: unlike triggerRecommendation (which
+  // both computes and immediately merges), the caller here has already shown the teacher
+  // a preview (via recommendSupportsForDifficulties, a pure function) and lets them confirm
+  // as-is or edit it first — this only commits whatever the teacher approved.
+  const applyRecommendedSupports = (
+    rec: SupportRecommendationResult,
+    rejected: { rejectedTextStrategies: string[]; rejectedVisualStrategies: string[] },
+    userId?: string
+  ) => {
+    setState(prev => {
+      const mergedText = Array.from(new Set([...prev.textStrategies, ...rec.textStrategies]));
+      const mergedVisual = Array.from(new Set([...prev.visualStrategies, ...rec.visualStrategies]));
+
+      return {
+        ...prev,
+        textModificationLevel: rec.textLevel,
+        visualModificationLevel: rec.visualLevel,
+        textStrategies: mergedText,
+        visualStrategies: mergedVisual,
+        isRecommendedApplied: true,
+        lastRecommendedTextStrats: rec.textStrategies,
+        lastRecommendedVisualStrats: rec.visualStrategies
+      };
+    });
+
+    logRecommendationEvent({
+      userId: userId || 'demo-teacher-01',
+      schoolLevel: state.schoolLevel,
+      subject: state.subject,
+      educationalNeeds: state.primaryNeeds,
+      recommendedStrategies: [...rec.textStrategies, ...rec.visualStrategies, ...rejected.rejectedTextStrategies, ...rejected.rejectedVisualStrategies],
+      teacherSelectedStrategies: [...rec.textStrategies, ...rec.visualStrategies],
+      teacherRejectedStrategies: [...rejected.rejectedTextStrategies, ...rejected.rejectedVisualStrategies]
+    });
+  };
+
   const generateMaterialAction = async (userId?: string): Promise<GeneratedMaterial> => {
     setState(prev => ({ ...prev, isGenerating: true }));
 
@@ -278,6 +346,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         textStrategies: state.textStrategies,
         visualModificationLevel: state.visualModificationLevel,
         visualStrategies: state.visualStrategies,
+        strategyResolutions: state.strategyResolutions,
         mustKeepOptions: state.mustKeepOptions,
         mustKeepText: state.mustKeepText,
         teacherRequest: state.teacherRequest
@@ -347,6 +416,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       textStrategies: material.textStrategies || [],
       visualModificationLevel: material.visualModificationLevel,
       visualStrategies: material.visualStrategies || [],
+      strategyResolutions: [],
       mustKeepOptions: material.mustKeepOptions || [],
       mustKeepText: material.mustKeepText || '',
       teacherRequest: material.teacherRequest || '',
@@ -379,10 +449,12 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         toggleTextStrategy,
         setVisualModificationLevel,
         toggleVisualStrategy,
+        addStrategyResolution,
         toggleMustKeepOption,
         setMustKeepText,
         setTeacherRequest,
         triggerRecommendation,
+        applyRecommendedSupports,
         generateMaterialAction,
         updateGeneratedContent,
         resetWizard,

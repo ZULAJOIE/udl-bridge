@@ -14,6 +14,7 @@ import { DocxExportService, PdfExportService } from '../../services/export';
 import { StudentDocumentRenderer } from '../document/StudentDocumentRenderer';
 import { FloatingReferenceWindow } from './FloatingReferenceWindow';
 import { defaultAiProvider } from '../../services/aiProvider';
+import { Tooltip } from '../common/Tooltip';
 import {
   FileText, Sparkles, Edit3, BookmarkPlus, Copy, RefreshCw, Check, ArrowLeft, Wand2,
   Download, Code, Eye, Plus, Minus, X, Image as ImageIcon, Trash2, Upload
@@ -460,15 +461,17 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
         {/* Tab & Drawer Actions */}
         <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
-          {/* 📄 원문 보기 Drawer Toggle Button */}
-          <button
-            onClick={() => setShowOriginalDrawer(true)}
-            className="btn-secondary px-3.5 py-2 text-xs font-extrabold"
-            title="왼쪽 원본 수업자료 Drawer 열기"
-          >
-            <FileText className="w-4 h-4" />
-            <span>📄 원문 보기</span>
-          </button>
+          {/* 📄 원문 보기 Floating Window Toggle Button */}
+          <Tooltip content="독립 플로팅 창으로 업로드된 원본 수업자료(PDF/이미지)를 대조하며 확인합니다." position="bottom">
+            <button
+              onClick={() => setShowOriginalDrawer(true)}
+              className="btn-secondary px-3.5 py-2 text-xs font-extrabold"
+              title="원문 수업자료 플로팅 창 열기"
+            >
+              <FileText className="w-4 h-4" />
+              <span>📄 원문 보기</span>
+            </button>
+          </Tooltip>
 
           <div className="flex items-center gap-1 bg-oat-50 p-1 rounded-lg border border-border">
             <button
@@ -496,32 +499,38 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
           </div>
 
           {/* Export & Save Buttons */}
-          <button
-            onClick={handleExportDocx}
-            disabled={exportingDocx}
-            className="btn-secondary px-3.5 py-2 text-xs font-extrabold"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{exportingDocx ? '생성 중...' : 'DOCX 다운로드'}</span>
-          </button>
+          <Tooltip content="현재 최신 수정본 기준 한글/Word 문서(.docx)를 생성하여 다운로드합니다." position="bottom">
+            <button
+              onClick={handleExportDocx}
+              disabled={exportingDocx}
+              className="btn-secondary px-3.5 py-2 text-xs font-extrabold"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{exportingDocx ? '생성 중...' : 'DOCX 다운로드'}</span>
+            </button>
+          </Tooltip>
 
-          <button
-            onClick={handleExportPdf}
-            disabled={exportingPdf}
-            className="btn-secondary px-3.5 py-2 text-xs font-extrabold"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{exportingPdf ? '생성 중...' : 'PDF 다운로드'}</span>
-          </button>
+          <Tooltip content="현재 최신 수정본 기준 학생용 A4 PDF 파일을 다운로드합니다." position="bottom">
+            <button
+              onClick={handleExportPdf}
+              disabled={exportingPdf}
+              className="btn-secondary px-3.5 py-2 text-xs font-extrabold"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{exportingPdf ? '생성 중...' : 'PDF 다운로드'}</span>
+            </button>
+          </Tooltip>
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary px-4 py-2 text-xs font-extrabold"
-          >
-            <BookmarkPlus className="w-4 h-4" />
-            <span>{saving ? '저장 중...' : '내 자료에 저장'}</span>
-          </button>
+          <Tooltip content="현재 학습자료 및 교사 수정 내역을 내 보관함에 최종 저장합니다." position="bottom">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary px-4 py-2 text-xs font-extrabold"
+            >
+              <BookmarkPlus className="w-4 h-4" />
+              <span>{saving ? '저장 중...' : '내 자료에 저장'}</span>
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -723,33 +732,41 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 className="input-field p-3 text-xs leading-relaxed resize-none font-sans"
               />
               <div className="flex flex-wrap gap-1.5 pt-1">
-                <button
-                  type="button"
-                  onClick={() => handleBlockRewrite('simplify')}
-                  disabled={!!rewritingAction}
-                  className="btn-ai px-3 py-1.5 text-xs font-semibold"
-                >
-                  <Wand2 className="w-3.5 h-3.5" />
-                  <span>{rewritingAction === 'simplify' ? '✨ 수정 중...' : '더 쉽게'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBlockRewrite('shorten')}
-                  disabled={!!rewritingAction}
-                  className="btn-ai px-3 py-1.5 text-xs font-semibold"
-                >
-                  <Wand2 className="w-3.5 h-3.5" />
-                  <span>{rewritingAction === 'shorten' ? '✨ 수정 중...' : '더 짧게'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBlockRewrite('add_example')}
-                  disabled={!!rewritingAction}
-                  className="btn-ai px-3 py-1.5 text-xs font-semibold"
-                >
-                  <Wand2 className="w-3.5 h-3.5" />
-                  <span>{rewritingAction === 'add_example' ? '✨ 수정 중...' : '예시 추가'}</span>
-                </button>
+                <Tooltip content="본문 내용을 쉬운 어휘와 직관적인 문장으로 AI가 재작성하여 기존 블록을 교체합니다." position="top">
+                  <button
+                    type="button"
+                    onClick={() => handleBlockRewrite('simplify')}
+                    disabled={!!rewritingAction}
+                    className="btn-ai px-3 py-1.5 text-xs font-semibold"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>{rewritingAction === 'simplify' ? '✨ 수정 중...' : '더 쉽게'}</span>
+                  </button>
+                </Tooltip>
+
+                <Tooltip content="핵심 원리는 보존하면서 본문 문장 길이를 축약해 재작성합니다." position="top">
+                  <button
+                    type="button"
+                    onClick={() => handleBlockRewrite('shorten')}
+                    disabled={!!rewritingAction}
+                    className="btn-ai px-3 py-1.5 text-xs font-semibold"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>{rewritingAction === 'shorten' ? '✨ 수정 중...' : '더 짧게'}</span>
+                  </button>
+                </Tooltip>
+
+                <Tooltip content="기존 본문 아래에 학생이 이해하기 쉬운 구체적 사례를 추가합니다." position="top">
+                  <button
+                    type="button"
+                    onClick={() => handleBlockRewrite('add_example')}
+                    disabled={!!rewritingAction}
+                    className="btn-ai px-3 py-1.5 text-xs font-semibold"
+                  >
+                    <Wand2 className="w-3.5 h-3.5" />
+                    <span>{rewritingAction === 'add_example' ? '✨ 수정 중...' : '예시 추가'}</span>
+                  </button>
+                </Tooltip>
               </div>
             </div>
 
@@ -888,24 +905,28 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
                       {/* Dual Actions: [✨ AI로 생성] [↑ 내 이미지 추가] */}
                       <div className="grid grid-cols-2 gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateVisual(sugg, selectedStyle)}
-                          disabled={isGenerating}
-                          className="btn-ai py-2 px-3 text-xs font-extrabold"
-                        >
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>{isGenerating ? '생성 중...' : '✨ AI로 생성'}</span>
-                        </button>
+                        <Tooltip content="시각자료 Level과 세부 전략에 맞춰 AI가 최적화된 사진/그림을 생성합니다." position="top">
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateVisual(sugg, selectedStyle)}
+                            disabled={isGenerating}
+                            className="btn-ai py-2 px-3 text-xs font-extrabold w-full"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>{isGenerating ? '생성 중...' : '✨ AI로 생성'}</span>
+                          </button>
+                        </Tooltip>
 
-                        <button
-                          type="button"
-                          onClick={() => handleTriggerTeacherImageUpload(sugg)}
-                          className="btn-secondary py-2 px-3 text-xs font-extrabold"
-                        >
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>↑ 내 이미지 추가</span>
-                        </button>
+                        <Tooltip content="선생님이 소장하신 JPG, PNG 이미지 파일을 직접 업로드하여 해당 자리에 삽입합니다." position="top">
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerTeacherImageUpload(sugg)}
+                            className="btn-secondary py-2 px-3 text-xs font-extrabold w-full"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>↑ 내 이미지 추가</span>
+                          </button>
+                        </Tooltip>
                       </div>
 
                       {/* Visual Format Style Picker (For AI generation) */}

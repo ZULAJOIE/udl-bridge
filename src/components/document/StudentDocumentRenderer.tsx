@@ -41,6 +41,19 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
       .filter(line => line.length > 0);
   };
 
+  // Render inline **bold** markdown as actual bold text instead of showing literal asterisks
+  const renderInlineMarkdown = (text: string): React.ReactNode => {
+    if (!text) return text;
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) =>
+      part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
+        <strong key={i}>{part.slice(2, -2)}</strong>
+      ) : (
+        <React.Fragment key={i}>{part}</React.Fragment>
+      )
+    );
+  };
+
   const getImageHeightClass = (visualId: string) => {
     const sz = imageSizes[visualId] || 'medium';
     if (sz === 'small') return 'max-h-[200px]';
@@ -97,7 +110,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
             <span>1. 핵심 개념</span>
           </h2>
           <div className="p-4 bg-oat-50 rounded-xl border border-border text-sm font-semibold text-charcoal-600 leading-relaxed">
-            {material.coreConcept}
+            {renderInlineMarkdown(material.coreConcept)}
           </div>
         </div>
       )}
@@ -130,7 +143,7 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
           <div className="space-y-2 text-sm text-charcoal-600 leading-relaxed font-normal">
             {formatContentLines(material.simplifiedContent).map((line, idx) => (
               <p key={idx} className="my-1">
-                {line}
+                {renderInlineMarkdown(line)}
               </p>
             ))}
           </div>
@@ -235,9 +248,9 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
           </h2>
           {material.activities.map((act, idx) => (
             <div key={idx} className="p-4 bg-oat-50/80 rounded-xl border border-border space-y-2">
-              <h3 className="text-sm font-bold text-charcoal">{act.title}</h3>
+              <h3 className="text-sm font-bold text-charcoal">{renderInlineMarkdown(act.title)}</h3>
               <div className="text-xs sm:text-sm text-charcoal-600 whitespace-pre-wrap leading-relaxed">
-                {act.content}
+                {renderInlineMarkdown(act.content)}
               </div>
 
               {/* Options with check marks */}
@@ -265,8 +278,8 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
           <h4 className="font-bold text-charcoal text-xs flex items-center gap-1">
             📌 교사용 참고사항 & 정답 안내
           </h4>
-          {material.summaryNote && <p className="text-[11px]">· 수정 적용 내역: {material.summaryNote}</p>}
-          {material.teacherNote && <p className="text-[11px]">· 지도 지침 / 요구사항: {material.teacherNote}</p>}
+          {material.summaryNote && <p className="text-[11px]">· 수정 적용 내역: {renderInlineMarkdown(material.summaryNote)}</p>}
+          {material.teacherNote && <p className="text-[11px]">· 지도 지침 / 요구사항: {renderInlineMarkdown(material.teacherNote)}</p>}
         </div>
       )}
     </div>

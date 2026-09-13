@@ -31,6 +31,33 @@ export interface UserProfile {
 
 export type ModificationLevel = 1 | 2 | 3 | 4 | 5;
 
+// STEP 2: concrete, observable classroom difficulties a teacher can select for a student.
+// This is NOT a diagnosis/disability classification — it only records what the teacher
+// observes during class, and drives rule-based support recommendations below.
+export type ObservedDifficultyCategory =
+  | 'reading' | 'vocabulary' | 'taskSequence' | 'memory' | 'expression' | 'visual' | 'engagement';
+
+export interface ObservedDifficultyItem {
+  id: string;
+  category: ObservedDifficultyCategory;
+  label: string;
+}
+
+// Output of the rule-based (or, later, AI-based) support recommendation engine.
+// textStrategies/visualStrategies use the SAME canonical strategy labels as Step 3
+// (ALL_TEXT_STRATEGIES / ALL_VISUAL_STRATEGIES) so a recommendation can be applied
+// directly into WizardState.textStrategies / visualStrategies without any translation.
+export interface SupportRecommendationResult {
+  textLevel: ModificationLevel;
+  visualLevel: ModificationLevel;
+  textStrategies: string[];
+  visualStrategies: string[];
+}
+
+// Teacher-facing purpose grouping for the "다른 수정 방법" browser (Step 3).
+// Purely a display/organization concept — does not affect level values, AI prompt mapping, or Firebase schema.
+export type StrategyCategory = 'readability' | 'coreFocus' | 'sequence' | 'contentClarity' | 'grouping';
+
 export interface StrategyItem {
   id: string;
   label: string;
@@ -38,6 +65,40 @@ export interface StrategyItem {
   recommendedForLevel?: ModificationLevel[];
   compatibleLevels?: ModificationLevel[];
   conflictLevels?: ModificationLevel[];
+  // Purpose-based grouping for the "다른 수정 방법" list (teacher-facing UI only)
+  category?: StrategyCategory;
+  // Tooltip/popover metadata (teacher-facing UI only — never sent to AI prompt / preview / export)
+  principle?: string;
+  exampleBefore?: string;
+  exampleAfter?: string;
+}
+
+// Relationship between two strategies when BOTH are selected at once.
+// 'compatible' is the default and is not stored — only exceptions are listed.
+export type StrategyRelationType = 'adjustable' | 'conflicting';
+
+export interface StrategyRelation {
+  aId: string;
+  bId: string;
+  type: StrategyRelationType;
+  // Shown as a short non-blocking note when type === 'adjustable'
+  note?: string;
+  // Shown in the confirmation modal when type === 'conflicting'
+  explanationA?: string;
+  explanationB?: string;
+  priorityALabel?: string;
+  priorityADetail?: string;
+  priorityBLabel?: string;
+  priorityBDetail?: string;
+}
+
+// A teacher's chosen priority between two strategies that were flagged as 'conflicting'.
+// Kept in wizard UI state only (not part of SavedMaterial/Firebase schema) and optionally
+// summarized into the AI prompt as an additional note.
+export interface StrategyResolution {
+  domain: 'text' | 'visual';
+  strategyLabels: [string, string];
+  priorityLabel: string;
 }
 
 export interface MaterialFile {
@@ -164,6 +225,10 @@ export interface MaterialGenerationInput {
   mustKeepOptions: string[];
   mustKeepText?: string;
   teacherRequest?: string;
+
+  // Optional: teacher-resolved priorities between strategies flagged as conflicting (Step 3).
+  // Additive only — existing prompt fields/mapping are unaffected when this is absent.
+  strategyResolutions?: StrategyResolution[];
 }
 
 export interface SavedMaterial {
