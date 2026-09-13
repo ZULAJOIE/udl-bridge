@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "npx gh-pages -d dist"
   },
   "dependencies": {
     "docx": "^9.7.1",
@@ -27,6 +27,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.19",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.2.2",
