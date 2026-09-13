@@ -14,7 +14,7 @@ import { saveMaterial, logUsageEvent } from '../../services/dataService';
 import { DocxExportService, PdfExportService } from '../../services/export';
 import { StudentDocumentRenderer } from '../document/StudentDocumentRenderer';
 import { FloatingReferenceWindow } from './FloatingReferenceWindow';
-import { defaultAiProvider } from '../../services/aiProvider';
+import { defaultAiProvider, getFallbackEducationalSvg } from '../../services/aiProvider';
 import { Tooltip } from '../common/Tooltip';
 import { RichHoverCard } from '../common/RichHoverCard';
 import { AiVerificationModal } from '../common/AiVerificationModal';
@@ -972,7 +972,10 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                           ) : (
                             <img
                               src={existingVisual.imageUrl}
-                              alt={existingVisual.description}
+                              alt={existingVisual.description || sugg.title}
+                              onError={(e) => {
+                                e.currentTarget.src = getFallbackEducationalSvg(existingVisual.description || sugg.title);
+                              }}
                               className="max-h-[120px] max-w-full object-contain rounded border border-border shadow-sm"
                             />
                           )}

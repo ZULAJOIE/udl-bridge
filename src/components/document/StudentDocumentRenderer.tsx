@@ -1,6 +1,7 @@
 import React from 'react';
 import { GeneratedMaterial, VisualSuggestion } from '../../types';
 import { Plus } from 'lucide-react';
+import { getFallbackEducationalSvg } from '../../services/aiProvider';
 
 interface StudentDocumentRendererProps {
   material: GeneratedMaterial;
@@ -238,7 +239,10 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                           ) : (
                             <img
                               src={visual.imageUrl}
-                              alt={visual.description}
+                              alt={visual.description || sugg.title}
+                              onError={(e) => {
+                                e.currentTarget.src = getFallbackEducationalSvg(visual.description || sugg.title);
+                              }}
                               className={`max-w-full ${getImageHeightClass(visual.id)} object-contain rounded-lg shadow-sm`}
                             />
                           )}
@@ -410,7 +414,10 @@ export const StudentDocumentRenderer: React.FC<StudentDocumentRendererProps> = (
                               ) : (
                                 <img
                                   src={visual.imageUrl}
-                                  alt={visual.description}
+                                  alt={visual.description || sugg.title}
+                                  onError={(e) => {
+                                    e.currentTarget.src = getFallbackEducationalSvg(visual.description || sugg.title);
+                                  }}
                                   className={`max-w-full ${getImageHeightClass(visual.id)} object-contain rounded-lg shadow-sm`}
                                 />
                               )}

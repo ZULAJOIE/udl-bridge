@@ -317,6 +317,19 @@ function createMockEducationalSvg(input: VisualGenerationInput): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
 }
 
+/**
+ * Universal fallback SVG for when external image URLs break or fail to load
+ */
+export function getFallbackEducationalSvg(title?: string): string {
+  return createMockEducationalSvg({
+    suggestionTitle: title || '학습 시각자료',
+    suggestionDescription: '학습 시각 지원 자료',
+    topic: title || '주요 핵심 내용',
+    visualLevel: 3,
+    strategies: []
+  });
+}
+
 export class MockAIProvider implements AIProvider {
   async generateMaterial(input: MaterialGenerationInput): Promise<GeneratedMaterial> {
     // Simulate network delay
