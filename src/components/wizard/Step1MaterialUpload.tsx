@@ -4,12 +4,28 @@ import { SchoolLevel, MaterialFile, MAX_FILE_SIZE_MB, MAX_SOURCE_PAGES } from '.
 import { SCHOOL_LEVEL_LABELS, SUBJECTS_BY_LEVEL } from '../../data/udlData';
 import {
   BookOpen, Upload, FileText, Image as ImageIcon, Check, Edit3,
-  AlertCircle, RefreshCw, X
+  AlertCircle, RefreshCw, X, Sparkles
 } from 'lucide-react';
 
 export const Step1MaterialUpload: React.FC = () => {
-  const { state, setSchoolLevel, setSubject, setTopic, setMaterialFile } = useWizard();
+  const { state, setSchoolLevel, setSubject, setTopic, setMaterialFile, setMustKeepText, setTeacherRequest } = useWizard();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLoadSampleFireworks = () => {
+    setSchoolLevel('middle');
+    setSubject('사회');
+    setTopic('세계 불꽃 축제, 단순한 불꽃놀이 아닌 도시 자산');
+    setMustKeepText('세계 불꽃 축제, 약 295억 원, 도시 자산, 소상공인 매출 증대');
+    setTeacherRequest('어려운 경제 어휘(도시 자산, 임시 고용, 소상공인)를 구체적인 예시와 쉬운 말로 설명하고, 선택형 응답 문제로 지원해 주세요.');
+
+    const sampleFile: MaterialFile = {
+      name: '세계_불꽃_축제_신문기사_예시자료.png',
+      type: 'image',
+      mimeType: 'image/png',
+      size: 358400
+    };
+    setMaterialFile(sampleFile);
+  };
 
   const [pdfOverPageNotice, setPdfOverPageNotice] = useState<boolean>(false);
   const [fileSizeErrorNotice, setFileSizeErrorNotice] = useState<string | null>(null);
@@ -203,6 +219,31 @@ export const Step1MaterialUpload: React.FC = () => {
             <span>3. 학습자료 업로드</span>
           </label>
           <span className="text-xs text-charcoal-400">PDF 1쪽 또는 이미지 1장 사용</span>
+        </div>
+
+        {/* Quick Sample Material Banner */}
+        <div className="p-3.5 rounded-xl bg-forest-50 border border-forest-200 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-forest-600 text-white flex items-center justify-center shrink-0 font-bold">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-forest-900">
+                예시 자료로 빠르게 체험해보세요!
+              </p>
+              <p className="text-[11px] text-forest-700 font-medium">
+                📰 『세계 불꽃 축제, 단순한 불꽃놀이 아닌 도시 자산』 신문기사 예시
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLoadSampleFireworks}
+            className="btn-primary px-3 py-1.5 text-xs shrink-0 flex items-center gap-1 font-bold shadow-xs hover:scale-102 transition-transform"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>예시 자료 불러오기</span>
+          </button>
         </div>
 
         <input

@@ -261,8 +261,18 @@ export class MockAIProvider implements AIProvider {
     const levelText = `글 Level ${input.textModificationLevel} (${input.textModificationLevel >= 4 ? '쉬운 표현 중심' : '구조화 중심'}) / 시각 Level ${input.visualModificationLevel}`;
     const generatedPrompt = buildGeneratedPrompt(input);
 
+    const safeTopic = input.topic || '';
+    const isFireworksSample = safeTopic.includes('불꽃') || safeTopic.includes('도시 자산');
+
     let simplifiedContent = "";
-    if (input.textModificationLevel >= 4) {
+    if (isFireworksSample) {
+      simplifiedContent = `🎆 **세계 불꽃 축제는 도시에 큰 도움이 돼요!**\n\n` +
+        `1. **밤하늘의 축제**: 매년 가을, 밤하늘을 수놓는 아름다운 불꽃 축제가 열려요.\n` +
+        `2. **295억 원의 경제 효과**: 불꽃 축제 덕분에 도시에 약 **295억 원**의 큰 경제적 이익이 생겨요.\n` +
+        `3. **동네 가게가 살아나요**: 매년 **100만 명 이상**(외국인 관광객 포함)이 찾아와 동네 식당과 가게에서 소비를 해요.\n` +
+        `4. **새로운 일자리**: 축제 기간 동안 일할 수 있는 임시 일자리가 늘어나 주민들에게 도움을 줘요.\n\n` +
+        `> 💡 **선생님의 힌트:** '도시 자산'이란 건물이나 땅처럼 도시에 큰 도움과 이익을 주는 보물 같은 것을 뜻해요!`;
+    } else if (input.textModificationLevel >= 4) {
       simplifiedContent = `🌱 **한눈에 알아봐요!**\n\n1. **${topicTitle}**은 수업에서 가장 중요한 내용이에요.\n2. 복잡하고 긴 문장을 쉬운 단어로 나누어 놓았어요.\n3. 핵심 낱말만 굵게 표시되어 있으니 천천히 읽어 보세요.\n\n> 💡 **선생님의 힌트:** ${input.teacherRequest || '그림과 단어를 짝지어 생각하면 훨씬 이해하기 쉬워요!'}`;
     } else if (input.textModificationLevel === 3) {
       simplifiedContent = `📌 **주요 개념 한 줄 정리**\n\n- **개념 1:** ${topicTitle}의 기본 의미를 파악합니다.\n- **개념 2:** 주요 과정과 특징을 순서대로 살펴봅니다.\n- **개념 3:** 실생활 예시를 통해 개념을 확인합니다.\n\n---\n\n[핵심 요약 박스]\n* 필수 교과 어휘: ${input.mustKeepText || '학습 필수 어휘 포함'}\n* 핵심 원리: 원문의 핵심 학습목표를 보존하여 작성되었습니다.`;
@@ -270,30 +280,53 @@ export class MockAIProvider implements AIProvider {
       simplifiedContent = `📖 **수업 자료 본문 (강조 및 구조화)**\n\n본문 내용 중 **핵심 개념**과 **필수 어휘**에 하이라이트가 적용되었습니다. 순서에 따라 단계별로 읽고 활동을 진행하세요.`;
     }
 
-    const activities = [
-      {
-        id: 'act-1',
-        type: 'concept' as const,
-        title: '1. 꼭 기억해야 할 핵심 개념',
-        content: `**${topicTitle}**\n\n- 핵심 원리: 식물이 햇빛, 물, 이산화탄소를 이용해 양분과 산소를 만드는 과정입니다.\n- 알맞은 말에 동그라미 표 하세요: ( 햇빛 / 빛이 없는 곳 )에서 잘 일어납니다.`
-      },
-      {
-        id: 'act-2',
-        type: 'activity' as const,
-        title: '2. 단계별 학습 활동 (그림 및 힌트 지원)',
-        content: `[1단계] 아래 그림을 보고 알맞은 단어를 연결해 보세요.\n\nㆍ 햇빛 ─────────── ( 식물이 에너지를 얻는 빛 )\nㆍ 물 ──────────── ( 뿌리에서 흡수해요 )\nㆍ 산소 ─────────── ( 식물이 만들어내는 기체 )`,
-        hint: '힌트: 화분에 물을 줄 때 식물이 쑥쑥 자라는 모습을 생각해보세요!'
-      },
-      {
-        id: 'act-3',
-        type: 'question' as const,
-        title: '3. 확인 문제 (선택형 응답)',
-        content: `다음 중 **${topicTitle}**에 필요한 요소가 **아닌** 것은 무엇일까요?`,
-        options: ['1) 햇빛', '2) 물', '3) 얼음 조각']
-      }
-    ];
+    const activities = isFireworksSample
+      ? [
+          {
+            id: 'act-1',
+            type: 'concept' as const,
+            title: '1. 꼭 기억해야 할 핵심 개념',
+            content: `**세계 불꽃 축제와 도시 자산**\n\n- 핵심 원리: 불꽃 축제는 단순한 볼거리가 아니라 동네 상권(식당, 가게)을 살리고 일자리를 만들어 주는 소중한 경제적 자산입니다.\n- 알맞은 말에 동그라미 표 하세요: 불꽃 축제는 동네 가게 장사에 ( 도움을 준다 / 안 준다 ).`
+          },
+          {
+            id: 'act-2',
+            type: 'activity' as const,
+            title: '2. 낱말과 뜻 짝짓기 (시각 힌트 지원)',
+            content: `[1단계] 아래 알맞은 단어와 설명을 화살표로 연결해 보세요.\n\nㆍ 295억 원 ─────────── ( 축제로 생기는 경제 효과 )\nㆍ 소상공인 ─────────── ( 동네에서 작은 가게를 운영하는 사장님 )\nㆍ 100만 명 ─────────── ( 매년 축제를 보러 오는 사람 수 )`,
+            hint: '힌트: 불꽃 축제에 정말 많은 사람들이 놀러 오는 모습을 떠올려 보세요!'
+          },
+          {
+            id: 'act-3',
+            type: 'question' as const,
+            title: '3. 확인 문제 (선택형 응답)',
+            content: `세계 불꽃 축제가 도시에 가져다주는 좋은 점으로 알맞은 것은 무엇일까요?`,
+            options: ['1) 동네 가게와 식당 매출이 늘어남', '2) 아무도 구경하러 오지 않음', '3) 도시에 돈이 전혀 안 됨']
+          }
+        ]
+      : [
+          {
+            id: 'act-1',
+            type: 'concept' as const,
+            title: '1. 꼭 기억해야 할 핵심 개념',
+            content: `**${topicTitle}**\n\n- 핵심 원리: 식물이 햇빛, 물, 이산화탄소를 이용해 양분과 산소를 만드는 과정입니다.\n- 알맞은 말에 동그라미 표 하세요: ( 햇빛 / 빛이 없는 곳 )에서 잘 일어납니다.`
+          },
+          {
+            id: 'act-2',
+            type: 'activity' as const,
+            title: '2. 단계별 학습 활동 (그림 및 힌트 지원)',
+            content: `[1단계] 아래 그림을 보고 알맞은 단어를 연결해 보세요.\n\nㆍ 햇빛 ─────────── ( 식물이 에너지를 얻는 빛 )\nㆍ 물 ──────────── ( 뿌리에서 흡수해요 )\nㆍ 산소 ─────────── ( 식물이 만들어내는 기체 )`,
+            hint: '힌트: 화분에 물을 줄 때 식물이 쑥쑥 자라는 모습을 생각해보세요!'
+          },
+          {
+            id: 'act-3',
+            type: 'question' as const,
+            title: '3. 확인 문제 (선택형 응답)',
+            content: `다음 중 **${topicTitle}**에 필요한 요소가 **아닌** 것은 무엇일까요?`,
+            options: ['1) 햇빛', '2) 물', '3) 얼음 조각']
+          }
+        ];
 
-    if (input.pageLength === 'a4_2') {
+    if (input.pageLength === 'a4_2' && !isFireworksSample) {
       activities.push({
         id: 'act-4',
         type: 'activity' as const,
@@ -310,7 +343,9 @@ export class MockAIProvider implements AIProvider {
       });
     }
 
-    const keywords = ['광합성', '햇빛', '물', '이산화탄소', '양분'];
+    const keywords = isFireworksSample
+      ? ['세계 불꽃 축제', '도시 자산', '295억 원', '소상공인', '외국인 관광객']
+      : ['광합성', '햇빛', '물', '이산화탄소', '양분'];
 
     // Provide 2 Visual Suggestions for Teacher to optionally click [✨ 그림 생성하기]
     const visualSuggestions: VisualSuggestion[] = [
