@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export const Step1MaterialUpload: React.FC = () => {
-  const { state, setSchoolLevel, setSubject, setTopic, setMaterialFile, setMustKeepText, setTeacherRequest } = useWizard();
+  const { state, setSchoolLevel, setSubject, setTopic, setSourceText, setMaterialFile, setMustKeepText, setTeacherRequest } = useWizard();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleLoadSampleFireworks = () => {
@@ -17,6 +17,7 @@ export const Step1MaterialUpload: React.FC = () => {
     setTopic('세계 불꽃 축제, 단순한 불꽃놀이 아닌 도시 자산');
     setMustKeepText('세계 불꽃 축제, 약 295억 원, 도시 자산, 소상공인 매출 증대');
     setTeacherRequest('어려운 경제 어휘(도시 자산, 임시 고용, 소상공인)를 구체적인 예시와 쉬운 말로 설명하고, 선택형 응답 문제로 지원해 주세요.');
+    setSourceText(`매년 가을, 밤하늘을 수놓는 ‘세계 불꽃 축제’가 도시의 문화 · 경제 자산으로 자리 잡고 있다는 분석이 나오고 있다. 한국문화관광연구원 서○○ 이사장은 “세계 불꽃 축제는 약 295억 원 규모의 경제 효과가 있다. 불꽃 축제 덕분에 인근 지역 상권이 활기를 띠고, 생활 소비가 확대되어 소상공인 매출 증대와 임시 고용 창출로 이어졌다.”라고 밝혔다. 또한 세계 불꽃 축제에 매년 100만 명 이상이 방문하며, 외국인 관광객의 비중도 꾸준히 늘고 있다고 덧붙였다. - 『아시아경제』, 2025. 9. 15.`);
 
     const sampleFile: MaterialFile = {
       name: '세계_불꽃_축제_신문기사_예시자료.png',

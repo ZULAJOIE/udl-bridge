@@ -17,6 +17,7 @@ interface WizardState {
   schoolLevel: SchoolLevel;
   subject: string;
   topic: string;
+  sourceText?: string;
   materialFile: MaterialFile | null;
   sourceMaterials: SourceMaterial[];
   pageSize: 'A4';
@@ -60,6 +61,7 @@ interface WizardContextType {
   setSchoolLevel: (level: SchoolLevel) => void;
   setSubject: (subject: string) => void;
   setTopic: (topic: string) => void;
+  setSourceText: (text: string) => void;
   setMaterialFile: (file: MaterialFile | null) => void;
   setSourceMaterials: (sources: SourceMaterial[]) => void;
   setPageOrientation: (orientation: 'portrait' | 'landscape') => void;
@@ -142,6 +144,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const setSubject = (subject: string) => setState(prev => ({ ...prev, subject }));
   const setTopic = (topic: string) => setState(prev => ({ ...prev, topic }));
+  const setSourceText = (sourceText: string) => setState(prev => ({ ...prev, sourceText }));
 
   const setMaterialFile = (materialFile: MaterialFile | null) => {
     setState(prev => {
@@ -342,6 +345,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         schoolLevel: state.schoolLevel,
         subject: state.subject,
         topic: state.topic,
+        sourceText: state.sourceText,
         file: state.materialFile,
         sourceMaterials: state.sourceMaterials,
         pageSize: state.pageSize,
@@ -449,6 +453,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSchoolLevel,
         setSubject,
         setTopic,
+        setSourceText,
         setMaterialFile,
         setSourceMaterials,
         setPageOrientation,

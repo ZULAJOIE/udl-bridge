@@ -29,9 +29,14 @@ export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
     ? 'A4 2장 이상 (여유로운 글씨/여백 및 심화/복습 활동 추가)'
     : '자동 (내용량에 맞춘 5장 이내 조절)';
 
+  const sourceContentText = input.sourceText || input.mustKeepText || input.topic || '교과서 주요 학습 내용';
+
   return `당신은 특수교육 및 UDL(보편적 학습 설계) 기반 교수적 수정 전문가입니다.
 
-[1. 학습자료 기본 정보 및 용지 설정]
+[1. 원본 수업자료 본문 텍스트 (반드시 100% 분석 및 반영)]
+${sourceContentText}
+
+[2. 학습자료 기본 정보 및 용지 설정]
 - 학교급: ${schoolText}학교
 - 교과: ${input.subject}
 - 단원/주제: ${input.topic || '교과서 주요 학습 내용'}
@@ -39,25 +44,25 @@ export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
 - 결과물 분량 설정: ${lengthText}
 - 원본 파일 첨부: ${input.file ? `${input.file.name} (${input.file.type.toUpperCase()})` : '없음'}
 
-[2. 학생 특성 및 교육적 요구]
+[3. 학생 특성 및 교육적 요구]
 - 학생 분류: ${disabilityText}
 - 선택된 주요 지원: ${needsText}
 
-[3. 교수적 수정 설정]
+[4. 교수적 수정 설정]
 - 텍스트 수정 Level: Level ${input.textModificationLevel}
 - 선택된 텍스트 수정 전략: ${input.textStrategies.length > 0 ? input.textStrategies.join(', ') : '기본 전략 적용'}
 - 시각자료 수정 Level: Level ${input.visualModificationLevel}
 - 선택된 시각자료 수정 전략: ${input.visualStrategies.length > 0 ? input.visualStrategies.join(', ') : '기본 전략 적용'}
 ${strategyPriorityText ? `- 전략 간 우선순위 (교사 지정): ${strategyPriorityText}` : ''}
 
-[4. 반드시 보존할 요소]
+[5. 반드시 보존할 요소]
 - 보존 항목: ${input.mustKeepOptions.length > 0 ? input.mustKeepOptions.join(', ') : '원래 학습목표, 핵심 개념'}
 ${input.mustKeepText ? `- 교사 지정 보존 어휘/문장: ${input.mustKeepText}` : ''}
 
-[5. 교사 추가 요청사항]
+[6. 교사 추가 요청사항]
 ${input.teacherRequest ? `- ${input.teacherRequest}` : '- 특이사항 없음'}
 
-위 조건에 맞춰 특수교육대상 학생 및 학습 지원이 필요한 학생을 위한 최적화된 [학생용 교수적 수정 학습자료]와 [교사용 정답/안내]를 작성해주세요.`;
+위 조건에 맞춰 [1. 원본 수업자료 본문 텍스트]의 내용과 어휘, 수치, 사실 정보를 100% 반영하여 특수교육대상 학생 및 학습 지원이 필요한 학생을 위한 최적화된 [학생용 교수적 수정 학습자료]와 [교사용 정답/안내]를 작성해주세요.`;
 }
 
 export function buildImageGenerationPrompt(input: VisualGenerationInput): string {
@@ -149,77 +154,95 @@ export interface AIProvider extends TextAIProvider, ImageAIProvider {
 function createMockEducationalSvg(input: VisualGenerationInput): string {
   const level = input.visualLevel;
   const title = input.suggestionTitle || input.topic;
-  const strategiesList = input.strategies.slice(0, 3).join(', ');
+  const safeTitle = title || '';
   const visualStyle = input.visualStyle || 'photorealistic';
   const styleLabel = visualStyle === 'photorealistic' ? '📷 실사형' : visualStyle === 'illustration' ? '🎨 일러스트' : '📐 도식';
 
+  const isFireworks = safeTitle.includes('불꽃') || safeTitle.includes('축제') || safeTitle.includes('자산') || safeTitle.includes('경제');
+  const isPhotosynthesis = safeTitle.includes('광합성') || safeTitle.includes('식물') || safeTitle.includes('햇빛');
+
   let contentSvg = '';
 
-  if (level === 5) {
-    // Single concept focus card
-    contentSvg = `
-      <rect x="180" y="70" width="240" height="140" rx="16" fill="#1e1b4b" stroke="#818cf8" stroke-width="3"/>
-      <text x="300" y="125" font-size="42" text-anchor="middle" fill="#fbbf24">☀️ → 🌿</text>
-      <text x="300" y="175" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff">${title}</text>
-    `;
-  } else if (level === 4) {
-    // Flowchart / Step-by-step diagram
-    contentSvg = `
-      <!-- Step 1 -->
-      <rect x="40" y="90" width="150" height="90" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
-      <text x="115" y="125" font-size="14" font-weight="bold" fill="#38bdf8" text-anchor="middle">1단계: 흡수</text>
-      <text x="115" y="155" font-size="22" text-anchor="middle">☀️ + 💧</text>
+  if (isFireworks) {
+    if (level === 5) {
+      contentSvg = `
+        <rect x="180" y="70" width="240" height="140" rx="16" fill="#1e1b4b" stroke="#818cf8" stroke-width="3"/>
+        <text x="300" y="125" font-size="42" text-anchor="middle" fill="#fbbf24">🎆 → 🏬</text>
+        <text x="300" y="175" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">세계 불꽃 축제 도시 자산</text>
+      `;
+    } else if (level === 4) {
+      contentSvg = `
+        <rect x="40" y="90" width="150" height="90" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+        <text x="115" y="120" font-size="13" font-weight="bold" fill="#38bdf8" text-anchor="middle">1단계: 축제</text>
+        <text x="115" y="150" font-size="20" text-anchor="middle">🎆 불꽃 축제</text>
 
-      <text x="215" y="142" font-size="24" fill="#94a3b8" text-anchor="middle">➔</text>
+        <text x="215" y="142" font-size="24" fill="#94a3b8" text-anchor="middle">➔</text>
 
-      <!-- Step 2 -->
-      <rect x="235" y="90" width="150" height="90" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
-      <text x="310" y="125" font-size="14" font-weight="bold" fill="#34d399" text-anchor="middle">2단계: 반응</text>
-      <text x="310" y="155" font-size="22" text-anchor="middle">🌿 잎 반응</text>
+        <rect x="235" y="90" width="150" height="90" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
+        <text x="310" y="120" font-size="13" font-weight="bold" fill="#34d399" text-anchor="middle">2단계: 방문</text>
+        <text x="310" y="150" font-size="20" text-anchor="middle">👥 100만 명</text>
 
-      <text x="410" y="142" font-size="24" fill="#94a3b8" text-anchor="middle">➔</text>
+        <text x="410" y="142" font-size="24" fill="#94a3b8" text-anchor="middle">➔</text>
 
-      <!-- Step 3 -->
-      <rect x="430" y="90" width="130" height="90" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
-      <text x="495" y="125" font-size="14" font-weight="bold" fill="#f43f5e" text-anchor="middle">3단계: 생성</text>
-      <text x="495" y="155" font-size="22" text-anchor="middle">🧪 양분</text>
-    `;
-  } else if (level === 3) {
-    // Simplified clear diagram
-    contentSvg = `
-      <rect x="80" y="80" width="440" height="110" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#0284c7" stroke-width="2" stroke-dasharray="6,6"/>
-      <circle cx="160" cy="135" r="35" fill="#f59e0b"/>
-      <text x="160" y="142" font-size="26" text-anchor="middle">☀️</text>
-      
-      <text x="230" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">+</text>
-      
-      <circle cx="300" cy="135" r="35" fill="#10b981"/>
-      <text x="300" y="142" font-size="26" text-anchor="middle">🌿</text>
-      
-      <text x="370" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">=</text>
+        <rect x="430" y="90" width="130" height="90" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
+        <text x="495" y="120" font-size="13" font-weight="bold" fill="#f43f5e" text-anchor="middle">3단계: 효과</text>
+        <text x="495" y="150" font-size="20" text-anchor="middle">💰 295억 원</text>
+      `;
+    } else if (level === 3) {
+      contentSvg = `
+        <rect x="80" y="80" width="440" height="110" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#0284c7" stroke-width="2" stroke-dasharray="6,6"/>
+        <circle cx="160" cy="135" r="35" fill="#f59e0b"/>
+        <text x="160" y="144" font-size="26" text-anchor="middle">🎆</text>
+        
+        <text x="230" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">+</text>
+        
+        <circle cx="300" cy="135" r="35" fill="#10b981"/>
+        <text x="300" y="144" font-size="26" text-anchor="middle">🏬</text>
+        
+        <text x="370" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">=</text>
 
-      <circle cx="440" cy="135" r="35" fill="#6366f1"/>
-      <text x="440" y="142" font-size="26" text-anchor="middle">🧪</text>
-    `;
-  } else if (level === 2) {
-    // Highlighted key points & arrows
-    contentSvg = `
-      <rect x="60" y="85" width="480" height="100" rx="14" fill="#0f172a" stroke="#f59e0b" stroke-width="3"/>
-      <text x="140" y="130" font-size="16" font-weight="bold" fill="#fef08a" text-anchor="middle">【 햇빛 에너지 】</text>
-      <text x="240" y="130" font-size="20" fill="#f59e0b" text-anchor="middle">➔</text>
-      <text x="340" y="130" font-size="16" font-weight="bold" fill="#6ee7b7" text-anchor="middle">【 식물 잎 작용 】</text>
-      <text x="430" y="130" font-size="20" fill="#f59e0b" text-anchor="middle">➔</text>
-      <text x="485" y="130" font-size="16" font-weight="bold" fill="#c084fc" text-anchor="middle">【 양분 】</text>
-      
-      <rect x="180" y="155" width="240" height="22" rx="4" fill="#f59e0b" fill-opacity="0.2"/>
-      <text x="300" y="170" font-size="11" font-weight="bold" fill="#fbbf24" text-anchor="middle">▲ 핵심 요소 하이라이트 적용</text>
-    `;
+        <circle cx="440" cy="135" r="35" fill="#6366f1"/>
+        <text x="440" y="144" font-size="26" text-anchor="middle">💰</text>
+      `;
+    } else {
+      contentSvg = `
+        <rect x="60" y="85" width="480" height="100" rx="14" fill="#0f172a" stroke="#f59e0b" stroke-width="3"/>
+        <text x="140" y="130" font-size="15" font-weight="bold" fill="#fef08a" text-anchor="middle">【 🎆 불꽃 축제 】</text>
+        <text x="240" y="130" font-size="20" fill="#f59e0b" text-anchor="middle">➔</text>
+        <text x="340" y="130" font-size="15" font-weight="bold" fill="#6ee7b7" text-anchor="middle">【 🏬 동네 상권 】</text>
+        <text x="430" y="130" font-size="20" fill="#f59e0b" text-anchor="middle">➔</text>
+        <text x="485" y="130" font-size="15" font-weight="bold" fill="#c084fc" text-anchor="middle">【 💰 295억 원 】</text>
+      `;
+    }
+  } else if (isPhotosynthesis) {
+    if (level === 5) {
+      contentSvg = `
+        <rect x="180" y="70" width="240" height="140" rx="16" fill="#1e1b4b" stroke="#818cf8" stroke-width="3"/>
+        <text x="300" y="125" font-size="42" text-anchor="middle" fill="#fbbf24">☀️ → 🌿</text>
+        <text x="300" y="175" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff">${title}</text>
+      `;
+    } else {
+      contentSvg = `
+        <rect x="80" y="80" width="440" height="110" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#0284c7" stroke-width="2" stroke-dasharray="6,6"/>
+        <circle cx="160" cy="135" r="35" fill="#f59e0b"/>
+        <text x="160" y="142" font-size="26" text-anchor="middle">☀️</text>
+        <text x="230" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">+</text>
+        <circle cx="300" cy="135" r="35" fill="#10b981"/>
+        <text x="300" y="142" font-size="26" text-anchor="middle">🌿</text>
+        <text x="370" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">=</text>
+        <circle cx="440" cy="135" r="35" fill="#6366f1"/>
+        <text x="440" y="142" font-size="26" text-anchor="middle">🧪</text>
+      `;
+    }
   } else {
-    // Level 1: Minimal outline
+    // Universal Educational SVG for any custom topics
     contentSvg = `
-      <rect x="100" y="80" width="400" height="110" rx="12" fill="#1e293b" stroke="#475569" stroke-width="2"/>
-      <text x="300" y="130" font-size="18" font-weight="bold" fill="#e2e8f0" text-anchor="middle">${title}</text>
-      <text x="300" y="160" font-size="12" fill="#94a3b8" text-anchor="middle">원본 개념 유지 시각자료 카드</text>
+      <rect x="60" y="85" width="480" height="100" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
+      <text x="140" y="130" font-size="15" font-weight="bold" fill="#38bdf8" text-anchor="middle">【 📌 핵심 개념 】</text>
+      <text x="240" y="130" font-size="20" fill="#94a3b8" text-anchor="middle">➔</text>
+      <text x="340" y="130" font-size="15" font-weight="bold" fill="#34d399" text-anchor="middle">【 💡 교수적 수정 】</text>
+      <text x="430" y="130" font-size="20" fill="#94a3b8" text-anchor="middle">➔</text>
+      <text x="485" y="130" font-size="15" font-weight="bold" fill="#fbbf24" text-anchor="middle">【 🎯 맞춤 학습 】</text>
     `;
   }
 
@@ -343,31 +366,56 @@ export class MockAIProvider implements AIProvider {
       });
     }
 
+    const isPhotosynthesisTopic = safeTopic.includes('광합성') || safeTopic.includes('식물') || input.subject === '과학';
+
     const keywords = isFireworksSample
       ? ['세계 불꽃 축제', '도시 자산', '295억 원', '소상공인', '외국인 관광객']
-      : ['광합성', '햇빛', '물', '이산화탄소', '양분'];
+      : isPhotosynthesisTopic
+      ? ['광합성', '햇빛', '물', '이산화탄소', '양분']
+      : [safeTopic || input.subject, '핵심 개념', '필수 어휘', '학습 내용', '주요 원리'];
 
     // Provide 2 Visual Suggestions for Teacher to optionally click [✨ 그림 생성하기]
-    const visualSuggestions: VisualSuggestion[] = [
-      {
-        id: 'sugg-concept-1',
-        sectionId: 'concept',
-        title: `${topicTitle} 단계별 과정 그림`,
-        description: '햇빛 → 식물의 잎 → 양분의 발생 과정을 순서대로 이해하기 쉬운 시각적 그림',
-        reason: `${topicTitle}의 발생 과정과 주요 요소 간 상호관계를 순서대로 명료하게 이해하는 데 매우 도움이 됩니다.`,
-        visualLevel: input.visualModificationLevel,
-        strategies: input.visualStrategies
-      },
-      {
-        id: 'sugg-activity-2',
-        sectionId: 'activity-2',
-        title: '핵심 요소 매칭 시각 카드',
-        description: '햇빛, 물, 산소의 형태와 특징을 직관적으로 보조해주는 핵심 시각 요소 낱말 카드',
-        reason: '글자로만 전달하기 어려운 핵심 과학 개념을 시각적 카드 형태로 제시하여 학생의 집중도와 이해를 높입니다.',
-        visualLevel: input.visualModificationLevel,
-        strategies: input.visualStrategies
-      }
-    ];
+    const visualSuggestions: VisualSuggestion[] = isFireworksSample
+      ? [
+          {
+            id: 'sugg-concept-1',
+            sectionId: 'concept',
+            title: `세계 불꽃 축제 도시 자산 도식`,
+            description: '불꽃 축제 ➔ 100만 명 방문 ➔ 295억 원 경제 효과 및 소상공인 매출 증대 구조도',
+            reason: '불꽃 축제가 지역 상권과 일자리에 가져다주는 문화·경제적 자산 가치를 시각화합니다.',
+            visualLevel: input.visualModificationLevel,
+            strategies: input.visualStrategies
+          },
+          {
+            id: 'sugg-activity-2',
+            sectionId: 'activity-2',
+            title: '핵심 어휘 매칭 시각 카드',
+            description: '295억 원, 소상공인, 외국인 관광객 시각 어휘 카드',
+            reason: '핵심 경제 개념 어휘의 직관적 이해 지원',
+            visualLevel: input.visualModificationLevel,
+            strategies: input.visualStrategies
+          }
+        ]
+      : [
+          {
+            id: 'sugg-concept-1',
+            sectionId: 'concept',
+            title: `${topicTitle} 핵심 개념 구조도`,
+            description: `${topicTitle}의 주요 원리와 핵심 요소를 한눈에 파악할 수 있는 시각자료`,
+            reason: `${topicTitle}의 핵심 개념 파지 및 시각적 이해 지원`,
+            visualLevel: input.visualModificationLevel,
+            strategies: input.visualStrategies
+          },
+          {
+            id: 'sugg-activity-2',
+            sectionId: 'activity-2',
+            title: '핵심 어휘 매칭 시각 카드',
+            description: '주요 어휘와 개념을 연결하는 시각 카드',
+            reason: '어휘 장벽 해소 및 시각 지원',
+            visualLevel: input.visualModificationLevel,
+            strategies: input.visualStrategies
+          }
+        ];
 
     const pageLengthDesc = input.pageLength === 'a4_1' ? 'A4 1장 맞춤' : input.pageLength === 'a4_2' ? 'A4 2장 이상' : '자동 분량';
 

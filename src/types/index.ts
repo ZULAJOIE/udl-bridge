@@ -212,6 +212,7 @@ export interface MaterialGenerationInput {
   schoolLevel: SchoolLevel;
   subject: string;
   topic?: string;
+  sourceText?: string;
   file?: MaterialFile | null;
   sourceMaterials?: SourceMaterial[];
   pageSize?: 'A4';
