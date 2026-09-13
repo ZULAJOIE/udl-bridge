@@ -1,6 +1,6 @@
 import React from 'react';
 import { WorksheetVerificationResult, VerificationFinding } from '../../types';
-import { ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Sparkles, X, ArrowRight } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Sparkles, X, ArrowRight, Trash2 } from 'lucide-react';
 
 interface AiVerificationModalProps {
   isOpen: boolean;
@@ -8,6 +8,7 @@ interface AiVerificationModalProps {
   loading: boolean;
   result: WorksheetVerificationResult | null;
   onApplySuggestions?: (suggestionsText: string) => void;
+  onCleanIrrelevantContent?: (cleanedText: string) => void;
   onProceedSave: () => void;
 }
 
@@ -17,12 +18,15 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
   loading,
   result,
   onApplySuggestions,
+  onCleanIrrelevantContent,
   onProceedSave
 }) => {
   if (!isOpen) return null;
 
+  const irrelevantFinding = result?.findings.find(f => f.category === '관련 없는 내용 (주제 외 내용)');
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-900/60 backdrop-blur-xs animate-in fade-in duration-200 font-sans">
       <div className="bg-white rounded-2xl border border-border shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         
         {/* Header */}
@@ -33,7 +37,7 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold">AI 원문 - 학습지 내용 오류 점검</h3>
-              <p className="text-xs text-forest-200">원본 수업자료와 학생용 학습지의 팩트 및 내용 일치성을 대조합니다.</p>
+              <p className="text-xs text-forest-200">원본 수업자료와 학생용 학습지의 팩트 및 관련 없는 내용 일치성을 대조합니다.</p>
             </div>
           </div>
           <button
@@ -54,7 +58,7 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-charcoal-800">Gemini AI가 원문과 학습지를 1:1 점검 중입니다...</h4>
-                <p className="text-xs text-charcoal-500">팩트 정확성, 핵심 수치, 주요 어휘 누락 및 난이도를 분석하고 있습니다.</p>
+                <p className="text-xs text-charcoal-500">팩트 정확성, 핵심 수치, 원문과 관련 없는 무관한 내용 및 난이도를 분석하고 있습니다.</p>
               </div>
             </div>
           ) : result ? (
@@ -126,7 +130,7 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
                               : 'bg-red-50 text-red-700 border-red-200'
                           }`}
                         >
-                          {item.type === 'correct' ? '일치' : item.type === 'warning' ? '주의' : '오류'}
+                          {item.type === 'correct' ? '일치' : item.type === 'warning' ? '주의' : '오류/무관'}
                         </span>
                       </div>
 
@@ -139,6 +143,20 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
                             <span className="font-bold text-[11px]">AI 수정 제안: </span>
                             <span>{item.suggestion}</span>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Irrelevant content specific action button */}
+                      {item.category === '관련 없는 내용 (주제 외 내용)' && onCleanIrrelevantContent && (
+                        <div className="ml-6 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => onCleanIrrelevantContent(item.cleanedText || '')}
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>🗑️ 관련 없는 내용 삭제하기 (교사 승인)</span>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -159,7 +177,18 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
             닫기
           </button>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            {irrelevantFinding && onCleanIrrelevantContent && (
+              <button
+                type="button"
+                onClick={() => onCleanIrrelevantContent(irrelevantFinding.cleanedText || '')}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-xs font-extrabold flex items-center gap-1.5 rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-white" />
+                <span>🗑️ 관련 없는 내용 삭제 (교사 승인)</span>
+              </button>
+            )}
+
             {result && result.findings.some(f => f.suggestion) && onApplySuggestions && (
               <button
                 type="button"
@@ -173,7 +202,7 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
                 className="btn-ai px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-2xs"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>AI 제안사항 학습지에 자동 반영</span>
+                <span>전체 AI 제안 반영</span>
               </button>
             )}
 
@@ -182,7 +211,7 @@ export const AiVerificationModal: React.FC<AiVerificationModalProps> = ({
               onClick={onProceedSave}
               className="btn-primary px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-sm"
             >
-              <span>확인 완료 및 저장하기</span>
+              <span>확인 완료 및 저장</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

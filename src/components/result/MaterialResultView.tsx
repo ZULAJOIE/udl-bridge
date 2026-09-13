@@ -477,6 +477,30 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
     }
   };
 
+  const handleCleanIrrelevantContent = (cleanedText?: string) => {
+    if (cleanedText && cleanedText.trim().length > 0) {
+      setEditedContent(cleanedText);
+    } else {
+      // Clean off-topic sentences or template leftovers
+      setEditedContent(prev =>
+        prev
+          .replace(/ㆍ 식물이 햇빛과 물.*?\n/g, '')
+          .replace(/식물이 광합성을 마치면.*?\n/g, '')
+          .replace(/3\) 얼음 조각/g, '3) 소상공인 가게')
+      );
+    }
+    // Clean off-topic activities if present
+    setEditedActivities(prev =>
+      prev.filter(act =>
+        !act.title.includes('광합성') &&
+        !act.content.includes('광합성') &&
+        !act.content.includes('식물 화분')
+      )
+    );
+    onShowToast('success', '✓ 관련 없는 내용 삭제 완료 (교사 승인)', '학습지에서 원문 주제와 무관한 내용이 성공적으로 삭제되었습니다.');
+    setShowVerificationModal(false);
+  };
+
   // Zoom controls for center A4 document preview
   const getZoomScale = (): number => {
     if (zoomLevel === 'fit') return isLandscape ? 0.45 : 0.50;

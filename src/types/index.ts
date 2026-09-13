@@ -162,9 +162,10 @@ export interface WorksheetVerificationInput {
 
 export interface VerificationFinding {
   type: 'correct' | 'warning' | 'error';
-  category: '팩트 검증' | '핵심 개념 누락' | '수준 및 맞춤법';
+  category: '팩트 검증' | '핵심 개념 누락' | '수준 및 맞춤법' | '관련 없는 내용 (주제 외 내용)';
   message: string;
   suggestion?: string;
+  cleanedText?: string;
 }
 
 export interface WorksheetVerificationResult {
