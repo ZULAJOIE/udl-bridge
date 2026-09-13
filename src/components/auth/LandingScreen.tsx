@@ -4,10 +4,9 @@ import { ArrowRight, Sparkles, ShieldCheck, HeartHandshake } from 'lucide-react'
 
 interface LandingScreenProps {
   onStart: () => void;
-  onDemoLogin?: () => void;
 }
 
-export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart, onDemoLogin }) => {
+export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart }) => {
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-charcoal flex flex-col justify-between selection:bg-[#EAF2EC] font-sans texture-paper">
       {/* Navigation Bar */}
@@ -18,14 +17,6 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart, onDemoLog
           </div>
           <span className="font-bold text-lg text-[#1A3323] tracking-tight">UDL·Bridge</span>
         </div>
-        {onDemoLogin && (
-          <button
-            onClick={onDemoLogin}
-            className="text-xs font-medium text-charcoal-600 hover:text-[#2D5A3F] bg-white/80 hover:bg-white border border-border/80 px-3.5 py-1.5 rounded-xl transition-all shadow-2xs"
-          >
-            데모 계정으로 체험
-          </button>
-        )}
       </header>
 
       {/* Main Landing Visual & Copy Hero */}

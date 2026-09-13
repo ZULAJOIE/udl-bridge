@@ -73,15 +73,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
             <span>Google로 계속하기</span>
             <ArrowRight className="w-4 h-4 text-charcoal-400" />
           </button>
-
-          {/* Quick Demo Login Option for development testing */}
-          <button
-            onClick={() => loginDemoUser('teacher')}
-            className="w-full py-2.5 px-4 rounded-lg bg-oat-50 hover:bg-oat-100 text-charcoal-600 hover:text-charcoal text-xs font-semibold border border-border transition-colors flex items-center justify-center gap-1.5"
-          >
-            <HeartHandshake className="w-3.5 h-3.5 text-sage-600" />
-            <span>데모 교사 계정으로 둘러보기</span>
-          </button>
         </div>
 
         {/* Informational Footer */}

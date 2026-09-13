@@ -57,7 +57,6 @@ const MainContent: React.FC = () => {
       <div className="min-h-screen bg-[#F8F6F0] text-charcoal flex flex-col justify-between font-sans">
         <LandingScreen
           onStart={() => setIsAuthModalOpen(true)}
-          onDemoLogin={() => loginDemoUser('teacher')}
         />
         <AuthSelectionModal
           isOpen={isAuthModalOpen}
