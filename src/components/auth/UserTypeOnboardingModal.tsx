@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserType, USER_TYPES } from '../../types';
-import { School, UserCheck, Building2, Users, BookOpen, ChevronRight, ShieldCheck, GraduationCap, Briefcase } from 'lucide-react';
+import { School, UserCheck, Building2, Users, BookOpen, ChevronRight, ShieldCheck, GraduationCap, Briefcase, CheckSquare, Square } from 'lucide-react';
 
 interface UserTypeOnboardingModalProps {
   onSelectUserType: (userType: UserType) => void;
@@ -28,10 +28,12 @@ const USER_TYPE_DESCRIPTIONS: Record<UserType, string> = {
 
 export const UserTypeOnboardingModal: React.FC<UserTypeOnboardingModalProps> = ({ onSelectUserType }) => {
   const [selectedType, setSelectedType] = useState<UserType>('special_class_teacher');
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreedToPrivacy) return;
     setIsSubmitting(true);
     await onSelectUserType(selectedType);
     setIsSubmitting(false);
@@ -52,13 +54,13 @@ export const UserTypeOnboardingModal: React.FC<UserTypeOnboardingModalProps> = (
           </h2>
 
           <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
-            서비스 개선을 위한 참고 정보이며 학생 개인정보는 수집하지 않습니다.
+            서비스 개선을 위한 참고 정보이며 개별 식별 정보는 수집하지 않습니다.
           </p>
         </div>
 
-        {/* User Type Selection Grid (Large Tile Selection) */}
+        {/* User Type Selection Grid */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 gap-2.5 max-h-[340px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-2.5 max-h-[320px] overflow-y-auto pr-1">
             {(Object.keys(USER_TYPES) as UserType[]).map((typeKey) => {
               const label = USER_TYPES[typeKey];
               const desc = USER_TYPE_DESCRIPTIONS[typeKey];
@@ -69,7 +71,7 @@ export const UserTypeOnboardingModal: React.FC<UserTypeOnboardingModalProps> = (
                   key={typeKey}
                   type="button"
                   onClick={() => setSelectedType(typeKey)}
-                  className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all duration-200 ${
+                  className={`w-full p-3.5 sm:p-4 rounded-2xl border text-left flex items-center justify-between transition-all duration-200 ${
                     isSelected
                       ? 'bg-[#EAF2EC] border-[#2D5A3F] shadow-xs'
                       : 'bg-white hover:bg-white/80 border-border text-charcoal-700'
@@ -95,19 +97,40 @@ export const UserTypeOnboardingModal: React.FC<UserTypeOnboardingModalProps> = (
             })}
           </div>
 
-          {/* Privacy Disclaimer Notice */}
-          <div className="p-3.5 rounded-xl bg-white border border-border text-[11px] text-charcoal-500 leading-relaxed flex items-start gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-[#2D5A3F] shrink-0 mt-0.5" />
-            <p>
-              입력하신 사용자 유형 정보는 통계적 서비스 개선 목적으로만 수집되며, 학생 이름, 학번, 학교명 등 식별 가능한 개별 정보는 어떠한 경우에도 수집하지 않습니다.
-            </p>
+          {/* Interactive Privacy Consent Checkbox & Simplified Terms */}
+          <div
+            onClick={() => setAgreedToPrivacy(prev => !prev)}
+            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+              agreedToPrivacy
+                ? 'bg-white border-[#2D5A3F] shadow-2xs'
+                : 'bg-gray-50 border-gray-300'
+            }`}
+          >
+            <div className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+              agreedToPrivacy ? 'bg-[#2D5A3F] border-[#2D5A3F] text-white' : 'border-gray-400 bg-white'
+            }`}>
+              {agreedToPrivacy ? '✓' : ''}
+            </div>
+            <div className="text-xs text-charcoal-700 leading-relaxed">
+              <div className="flex items-center gap-1.5 font-bold text-[#1A3323]">
+                <ShieldCheck className="w-4 h-4 text-[#2D5A3F]" />
+                <span>(필수) 서비스 이용 및 정보 활용 동의</span>
+              </div>
+              <p className="text-[11px] text-charcoal-500 mt-0.5">
+                선택하신 사용자 유형 정보는 UDL-Bridge 서비스 개선 및 통계 분석 목적으로 활용되며, 개인을 식별할 수 있는 개별 정보는 수집하지 않습니다.
+              </p>
+            </div>
           </div>
 
           {/* Submit Action Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-[#2D5A3F] hover:bg-[#234731] active:bg-[#1E3F2B] text-white font-semibold py-4 px-6 rounded-2xl shadow-sm transition-all duration-200 text-base"
+            disabled={isSubmitting || !agreedToPrivacy}
+            className={`w-full flex items-center justify-center gap-2 font-semibold py-4 px-6 rounded-2xl shadow-sm transition-all duration-200 text-base ${
+              agreedToPrivacy && !isSubmitting
+                ? 'bg-[#2D5A3F] hover:bg-[#234731] active:bg-[#1E3F2B] text-white cursor-pointer'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             <span>{isSubmitting ? '설정 저장 중...' : 'UDL-Bridge 시작하기'}</span>
             <ChevronRight className="w-5 h-5" />
