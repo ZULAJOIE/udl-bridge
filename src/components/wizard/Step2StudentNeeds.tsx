@@ -8,7 +8,8 @@ import {
   OBSERVED_DIFFICULTY_CATEGORY_ICONS,
   OBSERVED_DIFFICULTY_CATEGORY_ORDER
 } from '../../data/udlData';
-import { UserCheck, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserCheck, X, ChevronDown, ChevronUp, BookOpen } from 'lucide-react';
+import { UdlGuideModal } from '../common/UdlGuideModal';
 
 export const Step2StudentNeeds: React.FC = () => {
   const {
@@ -18,22 +19,35 @@ export const Step2StudentNeeds: React.FC = () => {
   } = useWizard();
 
   const [showSelectedSummary, setShowSelectedSummary] = useState(false);
+  const [showUdlGuideModal, setShowUdlGuideModal] = useState(false);
 
   const selectedCount = state.primaryNeeds.length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-forest-700 font-semibold text-xs uppercase tracking-wider mb-1">
-          <span>STEP 2</span>
-          <span>•</span>
-          <span>학생에게 필요한 지원</span>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-forest-700 font-semibold text-xs uppercase tracking-wider mb-1">
+            <span>STEP 2</span>
+            <span>•</span>
+            <span>학생에게 필요한 지원</span>
+          </div>
+          <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
+            <UserCheck className="w-6 h-6 text-forest-600" />
+            학생에게 어떤 지원이 필요한가요?
+          </h2>
         </div>
-        <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
-          <UserCheck className="w-6 h-6 text-forest-600" />
-          학생에게 어떤 지원이 필요한가요?
-        </h2>
+
+        <button
+          type="button"
+          onClick={() => setShowUdlGuideModal(true)}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#2D5A3F] bg-[#EAF2EC] hover:bg-[#d8e8dc] border border-[#C5DDCB] transition-all flex items-center gap-1.5 shrink-0 shadow-2xs"
+          title="보편적 학습 설계(UDL) 3.0 지침 도표 확인"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-[#2D5A3F]" />
+          <span>UDL 지침 3.0</span>
+        </button>
       </div>
 
       {/* 1. Special Education Targets Section */}
@@ -177,6 +191,12 @@ export const Step2StudentNeeds: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* UDL Guidelines Help Modal */}
+      <UdlGuideModal
+        isOpen={showUdlGuideModal}
+        onClose={() => setShowUdlGuideModal(false)}
+      />
     </div>
   );
 };

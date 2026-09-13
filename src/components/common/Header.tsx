@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { USER_TYPES } from '../../types';
 import { ProfileSettingsModal } from '../auth/ProfileSettingsModal';
-import { Sparkles, FolderHeart, BarChart3, LogOut, ShieldCheck, UserCheck, Database, LogIn, User } from 'lucide-react';
+import { UdlGuideModal } from './UdlGuideModal';
+import { Sparkles, FolderHeart, BarChart3, LogOut, ShieldCheck, UserCheck, Database, LogIn, User, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: 'wizard' | 'mymaterials' | 'admin';
@@ -13,6 +14,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowToast }) => {
   const { user, isFirebaseActive, loginWithGoogle, logout, switchDemoRole } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showUdlGuideModal, setShowUdlGuideModal] = useState(false);
 
   const userTypeLabel = user?.userType ? USER_TYPES[user.userType] : '교사 회원';
 
@@ -82,6 +84,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowT
                 <span>관리자 대시보드</span>
               </button>
             )}
+
+            {/* 💡 UDL Guidelines Help Button */}
+            <button
+              type="button"
+              onClick={() => setShowUdlGuideModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-[#2D5A3F] bg-[#EAF2EC] hover:bg-[#d8e8dc] border border-[#C5DDCB] transition-all shadow-2xs"
+              title="보편적 학습 설계(UDL) 3.0 가이드라인 지침 도표 확인"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-[#2D5A3F]" />
+              <span>UDL 지침 3.0</span>
+            </button>
           </nav>
 
           {/* User Info & Controls */}
@@ -157,6 +170,12 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowT
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         onShowToast={onShowToast || (() => {})}
+      />
+
+      {/* UDL Guidelines Help Modal */}
+      <UdlGuideModal
+        isOpen={showUdlGuideModal}
+        onClose={() => setShowUdlGuideModal(false)}
       />
     </>
   );

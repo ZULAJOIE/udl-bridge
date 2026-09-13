@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWizard } from '../../context/WizardContext';
 import { useAuth } from '../../context/AuthContext';
 import { MUST_KEEP_OPTIONS } from '../../data/udlData';
-import { Check, Sparkles, Loader2 } from 'lucide-react';
+import { Check, Sparkles, Loader2, BookOpen } from 'lucide-react';
 import { RichHoverCard } from '../common/RichHoverCard';
+import { UdlGuideModal } from '../common/UdlGuideModal';
 
 interface Step4Props {
   onMaterialGenerated: () => void;
@@ -30,6 +31,7 @@ export const Step4MustKeepAndGenerate: React.FC<Step4Props> = ({ onMaterialGener
   } = useWizard();
 
   const { user } = useAuth();
+  const [showUdlGuideModal, setShowUdlGuideModal] = useState(false);
 
   const supportGroups: SupportGroup[] = [
     {
@@ -108,15 +110,27 @@ export const Step4MustKeepAndGenerate: React.FC<Step4Props> = ({ onMaterialGener
   return (
     <div className="space-y-6">
       {/* Step Header */}
-      <div>
-        <div className="flex items-center gap-2 text-forest-700 font-semibold text-xs uppercase tracking-wider mb-1">
-          <span>STEP 4</span>
-          <span>•</span>
-          <span>보존 & 생성</span>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-forest-700 font-semibold text-xs uppercase tracking-wider mb-1">
+            <span>STEP 4</span>
+            <span>•</span>
+            <span>보존 & 생성</span>
+          </div>
+          <h2 className="text-xl font-bold text-charcoal">
+            이번 수업에서 꼭 유지해야 하는 것은 무엇인가요?
+          </h2>
         </div>
-        <h2 className="text-xl font-bold text-charcoal">
-          이번 수업에서 꼭 유지해야 하는 것은 무엇인가요?
-        </h2>
+
+        <button
+          type="button"
+          onClick={() => setShowUdlGuideModal(true)}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#2D5A3F] bg-[#EAF2EC] hover:bg-[#d8e8dc] border border-[#C5DDCB] transition-all flex items-center gap-1.5 shrink-0 shadow-2xs"
+          title="보편적 학습 설계(UDL) 3.0 지침 도표 확인"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-[#2D5A3F]" />
+          <span>UDL 지침 3.0</span>
+        </button>
       </div>
 
       {/* ① 꼭 유지할 내용 */}
@@ -336,6 +350,12 @@ export const Step4MustKeepAndGenerate: React.FC<Step4Props> = ({ onMaterialGener
           )}
         </button>
       </div>
+
+      {/* UDL Guidelines Help Modal */}
+      <UdlGuideModal
+        isOpen={showUdlGuideModal}
+        onClose={() => setShowUdlGuideModal(false)}
+      />
     </div>
   );
 };

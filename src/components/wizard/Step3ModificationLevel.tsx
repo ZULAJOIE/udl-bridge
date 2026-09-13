@@ -17,10 +17,11 @@ import {
   findStrategyRelation,
   recommendSupportsForDifficulties
 } from '../../data/udlData';
-import { FileText, Image as ImageIcon, Sparkles, Plus, Minus, AlertTriangle, Info, X, AlertCircle } from 'lucide-react';
+import { FileText, Image as ImageIcon, Sparkles, Plus, Minus, AlertTriangle, Info, X, AlertCircle, BookOpen } from 'lucide-react';
 import { StrategyInfoPopover } from './StrategyInfoPopover';
 import { StrategyCheckModal } from './StrategyCheckModal';
 import { RichHoverCard } from '../common/RichHoverCard';
+import { UdlGuideModal } from '../common/UdlGuideModal';
 
 const TEXT_SHORT_NAMES: Record<ModificationLevel, string> = {
   1: '원문 유지',
@@ -114,6 +115,7 @@ export const Step3ModificationLevel: React.FC = () => {
 
   // AI Support Recommendation Modal State
   const [showAiRecModal, setShowAiRecModal] = useState(false);
+  const [showUdlGuideModal, setShowUdlGuideModal] = useState(false);
   const [modalRecResult, setModalRecResult] = useState<SupportRecommendationResult | null>(null);
   const [selectedRecTextStrats, setSelectedRecTextStrats] = useState<string[]>([]);
   const [selectedRecVisualStrats, setSelectedRecVisualStrats] = useState<string[]>([]);
@@ -313,14 +315,26 @@ export const Step3ModificationLevel: React.FC = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAiRecModal}
-          className="btn-ai px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0 shadow-sm transition-all"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>✨ AI 추천</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowUdlGuideModal(true)}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#2D5A3F] bg-[#EAF2EC] hover:bg-[#d8e8dc] border border-[#C5DDCB] transition-all flex items-center gap-1.5 shadow-2xs"
+            title="보편적 학습 설계(UDL) 3.0 지침 도표 확인"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-[#2D5A3F]" />
+            <span>UDL 지침 3.0</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenAiRecModal}
+            className="btn-ai px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>✨ AI 추천</span>
+          </button>
+        </div>
       </div>
 
       {/* 1. TEXT MODIFICATION LEVEL SECTION */}
@@ -817,6 +831,12 @@ export const Step3ModificationLevel: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* UDL Guidelines Help Modal */}
+      <UdlGuideModal
+        isOpen={showUdlGuideModal}
+        onClose={() => setShowUdlGuideModal(false)}
+      />
     </div>
   );
 };
