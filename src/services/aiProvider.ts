@@ -419,11 +419,137 @@ export class MockAIProvider implements AIProvider {
   }
 }
 
-export class ServerAIProvider implements AIProvider {
+export class GeminiAIProvider implements AIProvider {
   private mock = new MockAIProvider();
 
+  private getApiKey(): string | undefined {
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) {
+        return import.meta.env.VITE_GEMINI_API_KEY;
+      }
+      if (typeof process !== 'undefined' && process.env && process.env.VITE_GEMINI_API_KEY) {
+        return process.env.VITE_GEMINI_API_KEY;
+      }
+    } catch (e) {
+      // Ignore env reading errors
+    }
+    return undefined;
+  }
+
   async generateMaterial(input: MaterialGenerationInput): Promise<GeneratedMaterial> {
-    return this.mock.generateMaterial(input);
+    const apiKey = this.getApiKey();
+    if (!apiKey) {
+      console.log('VITE_GEMINI_API_KEY environment variable not found. Using Mock AI Provider.');
+      return this.mock.generateMaterial(input);
+    }
+
+    try {
+      const prompt = buildGeneratedPrompt(input);
+      const systemInstruction = `당신은 특수교육 및 UDL(보편적 학습 설계) 교수적 수정 전문가입니다.
+다음 조건에 따라 순수 JSON 형식으로만 응답해주세요. markdown 코드 블록 (\`\`\`json ...) 없이 오직 유효한 JSON 문자열만 반환해야 합니다.
+
+JSON Schema format:
+{
+  "title": "학습지 제목",
+  "coreConcept": "핵심 개념 1~2문장",
+  "keywords": ["핵심어1", "핵심어2", "핵심어3"],
+  "simplifiedContent": "학생용 쉬운 본문 내용 (필요시 **볼드** 및 순서 번호 활용)",
+  "activities": [
+    {
+      "id": "act-1",
+      "type": "concept",
+      "title": "1. 활동 제목",
+      "content": "활동 내용 설명",
+      "options": ["1) 보기1", "2) 보기2", "3) 보기3"]
+    }
+  ],
+  "summaryNote": "적용된 교수적 수정 지침 요약",
+  "teacherNote": "교사 정답 및 지도 참고 가이드"
+}`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${systemInstruction}\n\n[요청 조건 지시문]\n${prompt}` }]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.4,
+              responseMimeType: 'application/json'
+            }
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+      }
+
+      const resData = await response.json();
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanJsonStr = rawText.replace(/```json\s*|\s*```/g, '').trim();
+
+      const parsed = JSON.parse(cleanJsonStr);
+
+      const schoolText = input.schoolLevel === 'elementary' ? '초등' : input.schoolLevel === 'middle' ? '중등' : '고등';
+      const topicTitle = input.topic || `${input.subject} 주요 핵심 학습 내용`;
+      const levelText = `글 Level ${input.textModificationLevel} / 시각 Level ${input.visualModificationLevel}`;
+
+      const baseResult: GeneratedMaterial = {
+        id: `mat-gemini-${Date.now()}`,
+        title: parsed.title || `[학생용 교수적 수정] ${schoolText} ${input.subject} - ${topicTitle}`,
+        schoolLevel: input.schoolLevel,
+        subject: input.subject,
+        topic: input.topic,
+        targetAudience: `${schoolText} ${input.subject} / ${input.primaryNeeds.join(', ') || '기본 교육적 요구'}`,
+        coreConcept: parsed.coreConcept || topicTitle,
+        simplifiedContent: parsed.simplifiedContent || '',
+        keywords: parsed.keywords || ['핵심어'],
+        activities: parsed.activities || [],
+        visualSuggestions: [
+          {
+            id: 'sugg-gemini-1',
+            sectionId: 'concept',
+            title: `${topicTitle} 단계별 시각자료`,
+            description: `${topicTitle}의 핵심 개념과 발생 과정을 한눈에 파악할 수 있는 시각자료`,
+            reason: '개념 이해 및 인지 파지 지원',
+            visualLevel: input.visualModificationLevel,
+            strategies: input.visualStrategies
+          },
+          {
+            id: 'sugg-gemini-2',
+            sectionId: 'activity-2',
+            title: '핵심 어휘 매칭 시각 카드',
+            description: '핵심 어휘와 그림을 매칭하는 시각자료',
+            reason: '어휘 장벽 해소 및 시각 지원',
+            visualLevel: input.visualModificationLevel,
+            strategies: input.visualStrategies
+          }
+        ],
+        visuals: [],
+        pageSize: input.pageSize || 'A4',
+        pageOrientation: input.pageOrientation || 'portrait',
+        pageLength: input.pageLength || 'auto',
+        summaryNote: parsed.summaryNote || `Google Gemini 1.5 UDL 교수적 수정 | ${levelText}`,
+        teacherNote: parsed.teacherNote || '교사용 정답 및 지도 가이드',
+        generatedPrompt: prompt,
+        createdAt: new Date().toLocaleString('ko-KR', { hour12: false })
+      };
+
+      return {
+        ...baseResult,
+        originalGeneratedContent: { ...baseResult }
+      };
+    } catch (err) {
+      console.warn('Gemini API request failed. Falling back to Mock AI Provider:', err);
+      return this.mock.generateMaterial(input);
+    }
   }
 
   async generateVisual(input: VisualGenerationInput): Promise<GeneratedVisual> {
@@ -431,9 +557,61 @@ export class ServerAIProvider implements AIProvider {
   }
 
   async rewriteBlock(input: BlockRewriteInput): Promise<string> {
-    return this.mock.rewriteBlock(input);
+    const apiKey = this.getApiKey();
+    if (!apiKey) return this.mock.rewriteBlock(input);
+
+    try {
+      const actionGuide =
+        input.action === 'simplify'
+          ? '학생 눈높이에 맞추어 더 쉬운 낱말과 구어체 문장으로'
+          : input.action === 'shorten'
+          ? '핵심 내용만 간추려 1~2줄의 짧은 요약문으로'
+          : '구체적인 일상생활 사례 예시를 추가하여';
+
+      const prompt = `다음 특수교육 학습지 본문 단락을 ${actionGuide} 다시 작성해주세요.
+
+[원문 내용]
+${input.content}
+
+오직 새로 작성된 학습지 단락 내용만 출력해주세요. 메타 설명이나 인사말은 금지합니다.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3 }
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error(`Gemini rewrite error: ${response.status}`);
+      const resData = await response.json();
+      return resData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || input.content;
+    } catch (e) {
+      console.warn('Gemini rewrite failed. Falling back to Mock:', e);
+      return this.mock.rewriteBlock(input);
+    }
   }
 }
 
-export const defaultAiProvider: AIProvider = new MockAIProvider();
+export class ServerAIProvider implements AIProvider {
+  private gemini = new GeminiAIProvider();
+
+  async generateMaterial(input: MaterialGenerationInput): Promise<GeneratedMaterial> {
+    return this.gemini.generateMaterial(input);
+  }
+
+  async generateVisual(input: VisualGenerationInput): Promise<GeneratedVisual> {
+    return this.gemini.generateVisual(input);
+  }
+
+  async rewriteBlock(input: BlockRewriteInput): Promise<string> {
+    return this.gemini.rewriteBlock(input);
+  }
+}
+
+export const defaultAiProvider: AIProvider = new GeminiAIProvider();
 
