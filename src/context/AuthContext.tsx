@@ -10,6 +10,7 @@ interface AuthContextType {
   isAuthInitializing: boolean;
   isFirebaseActive: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginWithGoogleAccount: (account?: { displayName: string; email: string }) => Promise<void>;
   loginAnonymously: () => Promise<void>;
   linkGoogleAccount: () => Promise<boolean>;
   loginDemoUser: (role?: 'teacher' | 'admin', status?: 'approved' | 'pending') => void;
@@ -98,8 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = async () => {
-    if (isFirebaseConfigured && auth) {
+  const loginWithGoogleAccount = async (account?: { displayName: string; email: string }) => {
+    if (isFirebaseConfigured && auth && !account) {
       try {
         const res = await signInWithPopup(auth, googleProvider);
         const fbUser = res.user;
@@ -112,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: fbUser.email || storedProfile.email,
             displayName: fbUser.displayName || storedProfile.displayName,
             photoURL: fbUser.photoURL || storedProfile.photoURL,
+            status: 'approved',
           });
           setNeedsUserTypeOnboarding(false);
         } else {
@@ -122,41 +124,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             photoURL: fbUser.photoURL || undefined,
             authType: 'google',
             role: 'teacher',
-            status: 'pending',
+            status: 'approved',
             createdAt: new Date().toISOString()
           });
           setNeedsUserTypeOnboarding(true);
         }
+        return;
       } catch (err) {
         console.error("Google Auth error:", err);
       }
-    } else {
-      // Demo Mode Google Login
-      const demoUid = `google-demo-${Date.now()}`;
-      const stored = await getUserProfile('demo-teacher-01');
-      if (stored && stored.userType) {
-        setUser({
-          ...DEFAULT_DEMO_USER,
-          displayName: '구글 연동 교사',
-          email: 'google.teacher@school.ed.kr',
-          authType: 'google',
-          userType: stored.userType,
-          status: 'approved'
-        });
-        setNeedsUserTypeOnboarding(false);
-      } else {
-        setUser({
-          uid: demoUid,
-          displayName: '구글 연동 교사',
-          email: 'google.teacher@school.ed.kr',
-          authType: 'google',
-          role: 'teacher',
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        });
-        setNeedsUserTypeOnboarding(true);
-      }
     }
+
+    // Demo/Web Mode Custom Google Account Login
+    const name = account?.displayName || 'Seed권주희';
+    const mail = account?.email || 'kweon135@seed.or.kr';
+    const customUid = `google-${mail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+    const stored = await getUserProfile(customUid);
+    if (stored && stored.userType) {
+      setUser({
+        ...stored,
+        displayName: name,
+        email: mail,
+        authType: 'google',
+        status: 'approved'
+      });
+      setNeedsUserTypeOnboarding(false);
+    } else {
+      setUser({
+        uid: customUid,
+        displayName: name,
+        email: mail,
+        authType: 'google',
+        role: 'teacher',
+        status: 'approved',
+        createdAt: new Date().toISOString()
+      });
+      setNeedsUserTypeOnboarding(true);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    return loginWithGoogleAccount();
   };
 
   const loginAnonymously = async () => {
@@ -321,6 +330,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthInitializing,
         isFirebaseActive: isFirebaseConfigured,
         loginWithGoogle,
+        loginWithGoogleAccount,
         loginAnonymously,
         linkGoogleAccount,
         loginDemoUser,

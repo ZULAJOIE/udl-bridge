@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { LogIn, Sparkles, X, AlertCircle, CheckSquare, Square } from 'lucide-react';
 import { LegalModal, LegalTab } from '../common/LegalModal';
+import { GoogleAccountPickerModal } from './GoogleAccountPickerModal';
 
 interface AuthSelectionModalProps {
   isOpen: boolean;
@@ -14,8 +15,9 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
   onClose,
   onShowToast,
 }) => {
-  const { loginWithGoogle, loginAnonymously } = useAuth();
+  const { loginWithGoogle, loginWithGoogleAccount, loginAnonymously, isFirebaseActive } = useAuth();
   const [loading, setLoading] = useState<'google' | 'anonymous' | null>(null);
+  const [showGooglePicker, setShowGooglePicker] = useState<boolean>(false);
   
   // Separate consent state for Terms and Privacy Policy
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
@@ -49,14 +51,39 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
     return true;
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLoginClick = () => {
     if (!validateConsent()) return;
+    if (isFirebaseActive) {
+      handleGoogleLogin();
+    } else {
+      setShowGooglePicker(true);
+    }
+  };
 
+  const handleGoogleLogin = async () => {
     setLoading('google');
     try {
       await loginWithGoogle();
       if (onShowToast) {
         onShowToast('success', 'Google 로그인 완료', '환영합니다!');
+      }
+      onClose();
+    } catch (error) {
+      if (onShowToast) {
+        onShowToast('error', '로그인 오류', 'Google 로그인 중 문제가 발생했습니다.');
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleSelectAccount = async (acc: { displayName: string; email: string }) => {
+    setShowGooglePicker(false);
+    setLoading('google');
+    try {
+      await loginWithGoogleAccount(acc);
+      if (onShowToast) {
+        onShowToast('success', 'Google 로그인 완료', `${acc.displayName}님 환영합니다!`);
       }
       onClose();
     } catch (error) {
@@ -210,7 +237,7 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
           <div className="space-y-3 mb-5">
             {/* Option 1: Google Login */}
             <button
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleLoginClick}
               disabled={loading !== null}
               className="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-50 border border-gray-300 text-charcoal font-semibold py-3.5 px-5 rounded-2xl shadow-xs transition-all duration-200 disabled:opacity-50 cursor-pointer"
             >
@@ -263,6 +290,13 @@ export const AuthSelectionModal: React.FC<AuthSelectionModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Google 계정 선택 모달 */}
+      <GoogleAccountPickerModal
+        isOpen={showGooglePicker}
+        onClose={() => setShowGooglePicker(false)}
+        onSelectAccount={handleSelectAccount}
+      />
 
       {/* 이용약관 및 개인정보처리방침 팝업 모달 */}
       <LegalModal

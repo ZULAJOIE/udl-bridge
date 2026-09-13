@@ -3,17 +3,19 @@ import { useAuth } from '../../context/AuthContext';
 import { ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { BridgeMotif } from '../common/BridgeMotif';
 import { LegalModal, LegalTab } from '../common/LegalModal';
+import { GoogleAccountPickerModal } from './GoogleAccountPickerModal';
 
 interface LoginViewProps {
   onShowToast?: (type: 'success' | 'error' | 'info', title: string, desc?: string) => void;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, loginWithGoogleAccount, isFirebaseActive } = useAuth();
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
   const [agreedToPrivacy, setAgreedToPrivacy] = useState<boolean>(false);
   const [showConsentError, setShowConsentError] = useState<boolean>(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
+  const [showGooglePicker, setShowGooglePicker] = useState<boolean>(false);
 
   const allAgreed = agreedToTerms && agreedToPrivacy;
 
@@ -24,7 +26,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
     if (nextState) setShowConsentError(false);
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLoginClick = () => {
     if (!agreedToTerms || !agreedToPrivacy) {
       setShowConsentError(true);
       if (onShowToast) {
@@ -37,6 +39,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
       return;
     }
 
+    if (isFirebaseActive) {
+      handleGoogleLogin();
+    } else {
+      setShowGooglePicker(true);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
       if (onShowToast) {
@@ -45,6 +55,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
     } catch (err) {
       if (onShowToast) {
         onShowToast('error', '로그인 오류', '로그인 처리 중 문제가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleSelectAccount = async (acc: { displayName: string; email: string }) => {
+    setShowGooglePicker(false);
+    try {
+      await loginWithGoogleAccount(acc);
+      if (onShowToast) {
+        onShowToast('success', 'Google 로그인 완료', `${acc.displayName}님 환영합니다!`);
+      }
+    } catch (err) {
+      if (onShowToast) {
+        onShowToast('error', '로그인 오류', 'Google 로그인 중 문제가 발생했습니다.');
       }
     }
   };
@@ -166,7 +190,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
           {/* Primary Action Button */}
           <div className="space-y-4 pt-1">
             <button
-              onClick={handleGoogleLogin}
+              onClick={handleGoogleLoginClick}
               className="w-full py-4 px-6 rounded-xl bg-white hover:bg-oat-50 text-charcoal font-bold text-base shadow-sm flex items-center justify-center gap-3 transition-all border border-border cursor-pointer"
             >
               {/* Google Icon SVG */}
@@ -206,6 +230,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onShowToast }) => {
 
         </div>
       </div>
+
+      {/* Google 계정 선택 모달 */}
+      <GoogleAccountPickerModal
+        isOpen={showGooglePicker}
+        onClose={() => setShowGooglePicker(false)}
+        onSelectAccount={handleSelectAccount}
+      />
 
       {/* 이용약관 및 개인정보처리방침 팝업 모달 */}
       <LegalModal
