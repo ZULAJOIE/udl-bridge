@@ -28,6 +28,8 @@ const DEFAULT_DEMO_USER: UserProfile = {
   authType: 'google',
   role: 'teacher',
   status: 'approved',
+  termsAgreed: true,
+  termsAgreedAt: '2026-03-01T00:00:00.000Z',
   createdAt: '2026-03-01',
   lastLoginAt: new Date().toISOString()
 };
@@ -277,7 +279,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user.email,
       user.displayName,
       user.role,
-      initialStatus
+      initialStatus,
+      user.termsAgreed ?? true,
+      user.termsAgreedAt || new Date().toISOString()
     );
     setUser(updated);
     setNeedsUserTypeOnboarding(false);

@@ -30,6 +30,8 @@ export interface UserProfile {
   authType?: 'google' | 'anonymous';
   role: 'teacher' | 'admin';
   status?: AccountStatus;
+  termsAgreed?: boolean;
+  termsAgreedAt?: string;
   createdAt: string;
   lastLoginAt?: string;
   updatedAt?: string;
