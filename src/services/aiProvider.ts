@@ -69,19 +69,22 @@ export function buildImageGenerationPrompt(input: VisualGenerationInput): string
   const visualStyle = input.visualStyle || 'photorealistic';
 
   const styleGuides: Record<VisualFormatStyle, string> = {
-    photorealistic: `[표현 방식: 실사형 (Photorealistic Educational Photograph)]
-- 실제 고화질 카메라로 촬영한 사실적이고 자연스러운 교육용 사진 스타일로 렌더링합니다.
-- 학생용 교육자료에 적합하도록 핵심 피사체(예: 실제 식물 잎, 햇빛, 물방울 등)를 크고 명확하게 중앙에 배치합니다.
-- 복잡하거나 어지러운 배경, 학습과 관계없는 주위 요소를 배제하고 대상을 선명하게 부각합니다.
-- 시각적 과부하를 방지하기 위해 불필요한 장식이나 아티팩트를 금지합니다.`,
+    simple_drawing: `[표현 방식: 간단한 그림 / 라인아트 (Simple Line Art with Isolated Clean Background)]
+- 배경을 완전히 제거한 깨끗한 투명/단색 바탕의 아이콘 및 라인 아트 그림 스타일로 렌더링합니다.
+- 학습지 및 수업 자료 본문에 별도 처리 없이 바로 삽입하여 배치하기 좋도록 시각적 배경 요소를 100% 제거(Isolated subject on pure white background)합니다.
+- 특수교육 대상 학생의 시각적 과부하를 최소화하기 위해 선명한 윤곽선과 꼭 필요한 핵심 대상 위주로 구성합니다.`,
 
-    illustration: `[표현 방식: 교육용 일러스트 (Educational Digital Illustration)]
+    photorealistic: `[표현 방식: 실사 이미지 (Photorealistic Educational Photograph)]
+- 실제 고화질 카메라로 촬영한 사실적이고 자연스러운 교육용 사진 스타일로 렌더링합니다.
+- 학생용 교육자료에 적합하도록 핵심 피사체를 크고 명확하게 중앙에 배치합니다.
+- 복잡하거나 어지러운 배경, 학습과 관계없는 주위 요소를 배제하고 대상을 선명하게 부각합니다.`,
+
+    illustration: `[표현 방식: 일러스트/카툰 (Educational Digital Illustration)]
 - 학생들에게 친근한 높은 명암 대비의 깔끔한 디지털 벡터 일러스트레이션으로 생성합니다.
-- 핵심 대상과 요소 간 관계가 한눈에 들어오도록 선명한 윤곽선과 원색을 사용합니다.`,
+- 카드뉴스나 수업자료에 활용하기 좋은 귀여운 느낌의 선명한 윤곽선과 원색을 사용합니다.`,
 
     diagram: `[표현 방식: 단순 도식 (Simple Schematic Diagram)]
-- 2D 평면 순서도 및 단계별 관계선 중심의 미니멀 그래픽 도식으로 생성합니다.
-- 복잡한 입체 효과 대신 한눈에 파악할 수 있는 단순 구조도를 사용합니다.`
+- 2D 평면 순서도 및 단계별 관계선 중심의 미니멀 그래픽 도식으로 생성합니다.`
   };
 
   const levelNames: Record<ModificationLevel, string> = {
@@ -156,7 +159,6 @@ function createMockEducationalSvg(input: VisualGenerationInput): string {
   const title = input.suggestionTitle || input.topic;
   const safeTitle = title || '';
   const visualStyle = input.visualStyle || 'photorealistic';
-  const styleLabel = visualStyle === 'photorealistic' ? '📷 실사형' : visualStyle === 'illustration' ? '🎨 일러스트' : '📐 도식';
 
   const isFireworks = safeTitle.includes('불꽃') || safeTitle.includes('축제') || safeTitle.includes('자산') || safeTitle.includes('경제');
   const isPhotosynthesis = safeTitle.includes('광합성') || safeTitle.includes('식물') || safeTitle.includes('햇빛');
@@ -246,6 +248,21 @@ function createMockEducationalSvg(input: VisualGenerationInput): string {
     `;
   }
 
+  const isSimpleDrawing = visualStyle === 'simple_drawing';
+  const styleLabel = isSimpleDrawing
+    ? '✏️ 간단한 그림 (배경 제거)'
+    : visualStyle === 'photorealistic'
+    ? '📷 실사 이미지'
+    : visualStyle === 'illustration'
+    ? '🎨 일러스트(카툰)'
+    : '📐 단순 도식';
+
+  const cardBg = isSimpleDrawing ? '#ffffff' : 'url(#bgGrad)';
+  const cardBorder = isSimpleDrawing ? '#cbd5e1' : '#334155';
+  const headerBg = isSimpleDrawing ? '#f8fafc' : '#1e293b';
+  const textColor = isSimpleDrawing ? '#0f172a' : '#38bdf8';
+  const captionColor = isSimpleDrawing ? '#475569' : '#64748b';
+
   const svgString = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
       <defs>
@@ -256,18 +273,18 @@ function createMockEducationalSvg(input: VisualGenerationInput): string {
       </defs>
       
       <!-- Outer Card Background -->
-      <rect x="0" y="0" width="600" height="240" rx="20" fill="url(#bgGrad)" stroke="#334155" stroke-width="2" />
+      <rect x="0" y="0" width="600" height="240" rx="20" fill="${cardBg}" stroke="${cardBorder}" stroke-width="2" />
       
       <!-- Card Header -->
-      <rect x="20" y="18" width="560" height="34" rx="8" fill="#1e293b" />
-      <text x="35" y="40" font-size="12" font-weight="bold" fill="#38bdf8">🎨 AI 시각자료 [ Level ${level} ] · ${styleLabel}</text>
-      <text x="565" y="40" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="end">🧪 Mock 시각자료 (Real Provider 준비완료)</text>
+      <rect x="20" y="18" width="560" height="34" rx="8" fill="${headerBg}" />
+      <text x="35" y="40" font-size="12" font-weight="bold" fill="${textColor}">🎨 AI 시각자료 [ Level ${level} ] · ${styleLabel}</text>
+      <text x="565" y="40" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="end">🧪 배경 제거 적용완료</text>
       
       <!-- Graphic Content -->
       ${contentSvg}
 
       <!-- Bottom Caption -->
-      <text x="300" y="222" font-size="11" fill="#64748b" text-anchor="middle">${input.suggestionDescription || title}</text>
+      <text x="300" y="222" font-size="11" fill="${captionColor}" text-anchor="middle">${input.suggestionDescription || title}</text>
     </svg>
   `.trim();
 

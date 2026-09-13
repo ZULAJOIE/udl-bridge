@@ -782,11 +782,106 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
             </div>
 
             {/* Field 5: AI 시각자료 및 교사 직접 이미지 추가 카운터 */}
-            <div className="space-y-3 pt-2 border-t border-border">
+            <div className="space-y-4 pt-2 border-t border-border">
               <label className="text-xs font-bold text-charcoal-600 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-sage-700" />
-                <span>시각자료 제어 (AI 생성 & 교사 이미지 직접 추가)</span>
+                <span>시각자료 제어 & AI 생성 화풍 선택</span>
               </label>
+
+              {/* Visual Style Selection 3 Cards (Nano-Banana / Gemini Imagen Style Selector) */}
+              <div className="space-y-2 p-3 rounded-xl bg-oat-50/80 border border-border">
+                <span className="text-[11px] font-bold text-charcoal-600 block">
+                  🎨 AI 시각자료 변환 화풍 선택
+                </span>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Card 1: 간단한 그림 (배경 제거) */}
+                  <div
+                    onClick={() => setSelectedStyle('simple_drawing')}
+                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                      selectedStyle === 'simple_drawing'
+                        ? 'border-blue-500 bg-white shadow-xs'
+                        : 'border-border bg-white hover:border-charcoal-300'
+                    }`}
+                  >
+                    <div className="w-full aspect-[4/3] rounded-lg bg-slate-50 border border-slate-200 flex flex-col items-center justify-center p-1 mb-1.5 overflow-hidden">
+                      <span className="text-2xl">🎇</span>
+                      <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 mt-1">
+                        배경 제거
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-extrabold text-charcoal leading-tight">간단한 그림</p>
+                      <p className="text-[9.5px] text-charcoal-500 leading-tight mt-1">
+                        학습지, 자료, 시각화에 사용하기 좋은 그림으로 변환해요.
+                      </p>
+                    </div>
+                    <div className="mt-2 flex justify-center">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        selectedStyle === 'simple_drawing' ? 'border-blue-500 bg-blue-500' : 'border-charcoal-300'
+                      }`}>
+                        {selectedStyle === 'simple_drawing' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: 실사 이미지 */}
+                  <div
+                    onClick={() => setSelectedStyle('photorealistic')}
+                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                      selectedStyle === 'photorealistic'
+                        ? 'border-blue-500 bg-white shadow-xs'
+                        : 'border-border bg-white hover:border-charcoal-300'
+                    }`}
+                  >
+                    <div className="w-full aspect-[4/3] rounded-lg bg-slate-900 border border-slate-700 flex flex-col items-center justify-center p-1 mb-1.5 overflow-hidden text-white">
+                      <span className="text-2xl">📸</span>
+                      <span className="text-[9px] font-bold text-slate-300 mt-1">실사 사진</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-extrabold text-charcoal leading-tight">실사 이미지</p>
+                      <p className="text-[9.5px] text-charcoal-500 leading-tight mt-1">
+                        원본과 유사한 현실적인 사진으로 변환해요.
+                      </p>
+                    </div>
+                    <div className="mt-2 flex justify-center">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        selectedStyle === 'photorealistic' ? 'border-blue-500 bg-blue-500' : 'border-charcoal-300'
+                      }`}>
+                        {selectedStyle === 'photorealistic' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: 일러스트(카툰) */}
+                  <div
+                    onClick={() => setSelectedStyle('illustration')}
+                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                      selectedStyle === 'illustration'
+                        ? 'border-blue-500 bg-white shadow-xs'
+                        : 'border-border bg-white hover:border-charcoal-300'
+                    }`}
+                  >
+                    <div className="w-full aspect-[4/3] rounded-lg bg-indigo-950 border border-indigo-800 flex flex-col items-center justify-center p-1 mb-1.5 overflow-hidden text-white">
+                      <span className="text-2xl">🎨</span>
+                      <span className="text-[9px] font-bold text-amber-300 mt-1">카툰 아트</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-extrabold text-charcoal leading-tight">일러스트(카툰)</p>
+                      <p className="text-[9.5px] text-charcoal-500 leading-tight mt-1">
+                        수업 자료, 카드뉴스 등에 활용하기 좋은 귀여운 일러스트로 변환해요.
+                      </p>
+                    </div>
+                    <div className="mt-2 flex justify-center">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        selectedStyle === 'illustration' ? 'border-blue-500 bg-blue-500' : 'border-charcoal-300'
+                      }`}>
+                        {selectedStyle === 'illustration' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="space-y-3">
                 {visualSuggestions.map(sugg => {

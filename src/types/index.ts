@@ -124,11 +124,12 @@ export interface MaterialActivity {
   hint?: string;
 }
 
-export type VisualFormatStyle = 'photorealistic' | 'illustration' | 'diagram';
+export type VisualFormatStyle = 'simple_drawing' | 'photorealistic' | 'illustration' | 'diagram';
 
 export const VISUAL_STYLE_LABELS: Record<VisualFormatStyle, string> = {
-  photorealistic: '실사형 (Photorealistic)',
-  illustration: '교육용 일러스트',
+  simple_drawing: '간단한 그림 (배경 제거)',
+  photorealistic: '실사 이미지',
+  illustration: '일러스트(카툰)',
   diagram: '단순 도식'
 };
 
