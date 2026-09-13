@@ -27,7 +27,7 @@ export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
     ? 'A4 1장 (한 페이지 완결 배치)'
     : input.pageLength === 'a4_2'
     ? 'A4 2장 이상 (여유로운 글씨/여백 및 심화/복습 활동 추가)'
-    : '자동 (내용량에 맞춘 1~2페이지 조절)';
+    : '자동 (내용량에 맞춘 5장 이내 조절)';
 
   return `당신은 특수교육 및 UDL(보편적 학습 설계) 기반 교수적 수정 전문가입니다.
 

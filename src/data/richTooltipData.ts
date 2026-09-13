@@ -69,7 +69,7 @@ export const RICH_TOOLTIP_DATA: Record<string, RichTooltipData> = {
     title: '결과물 분량 · 자동',
     coreRole: '학습지 본문 길이에 맞춰 AI가 최적의 A4 페이지 수로 자동 조절합니다.',
     beforeExample: '기본 설정',
-    afterExample: '내용 길이에 맞추어 1~2페이지 분량으로 자동 맞춤'
+    afterExample: '내용 길이에 맞추어 5장 이내 분량으로 자동 맞춤'
   },
   'A4 1장': {
     title: '결과물 분량 · A4 1장 맞춤',
