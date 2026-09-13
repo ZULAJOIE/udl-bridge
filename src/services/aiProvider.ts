@@ -136,37 +136,52 @@ export function buildEnglishEducationalImagePrompt(input: VisualGenerationInput)
   const desc = input.suggestionDescription || '';
   const teacherPrompt = input.teacherCustomPrompt || '';
 
-  // Educational Concept Subject Enforcers
-  let topicEn = 'educational concept visualization';
-  const combinedText = `${topic} ${title} ${desc}`;
+  const combinedText = `${topic} ${title} ${desc} ${teacherPrompt}`;
+
+  // 100% Pure English Subject Translation (Prevents Pollinations URL UTF-8 bugs & random woman portrait fallback)
+  let subjectEn = '';
 
   if (combinedText.includes('불꽃') || combinedText.includes('축제')) {
-    topicEn = 'spectacular colorful fireworks display over city skyline, night city festival landscape, economic benefit chart';
+    subjectEn = 'spectacular colorful fireworks display in night sky over city river bridge, children watching fireworks';
   } else if (combinedText.includes('광합성')) {
-    topicEn = 'plant photosynthesis process diagram, green leaves, bright sunlight rays, water droplets, carbon dioxide molecule icons';
-  } else if (combinedText.includes('식물') || combinedText.includes('잎')) {
-    topicEn = 'detailed plant anatomy structure, roots, stem, green leaf texture, botany educational diagram';
-  } else if (combinedText.includes('수학') || combinedText.includes('도형') || combinedText.includes('분수')) {
-    topicEn = 'math counting blocks, geometric shapes, educational fraction pie chart';
-  } else if (combinedText.includes('경제') || combinedText.includes('자산') || combinedText.includes('소상공인')) {
-    topicEn = 'city local market shops, small business storefronts, financial growth bar chart infographic';
+    subjectEn = 'plant photosynthesis diagram, green leaf structure, bright sunlight rays, water drops, carbon dioxide molecules';
+  } else if (combinedText.includes('식물') || combinedText.includes('잎') || combinedText.includes('뿌리')) {
+    subjectEn = 'botany plant structure diagram, roots, green leaf, flower anatomy, science textbook chart';
+  } else if (combinedText.includes('수학') || combinedText.includes('도형') || combinedText.includes('분수') || combinedText.includes('숫자')) {
+    subjectEn = 'math counting blocks, colorful 3D geometric shapes, fraction circle pie chart, educational math chart';
+  } else if (combinedText.includes('경제') || combinedText.includes('자산') || combinedText.includes('소상공인') || combinedText.includes('매출')) {
+    subjectEn = 'city local market storefronts, small business shops, financial growth bar chart infographic';
+  } else if (combinedText.includes('과학') || combinedText.includes('실험') || combinedText.includes('물리') || combinedText.includes('화학')) {
+    subjectEn = 'science laboratory equipment, microscope, test tubes with colorful liquids, molecular structure, science textbook illustration';
+  } else if (combinedText.includes('우주') || combinedText.includes('행성') || combinedText.includes('태양계')) {
+    subjectEn = 'solar system planets orbiting sun, outer space astronomy diagram, vivid educational illustration';
+  } else if (combinedText.includes('동물') || combinedText.includes('생물')) {
+    subjectEn = 'friendly animal species infographic, wildlife nature ecosystem illustration';
+  } else if (combinedText.includes('날씨') || combinedText.includes('계절') || combinedText.includes('구름')) {
+    subjectEn = 'weather water cycle diagram, sun, rain cloud, evaporation and condensation cycle';
   } else {
-    // General Educational Concept
-    topicEn = `${topic} - ${title}`.replace(/[^\w\s\u3131-\u318E\uAC00-\uD7A3]/gi, ' ').trim();
+    // Strip all non-ASCII/Korean characters so URL encoding never contains raw UTF-8 bytes
+    const asciiTopic = topic.replace(/[^\x00-\x7F]/g, ' ').replace(/\s+/g, ' ').trim();
+    subjectEn = asciiTopic ? `${asciiTopic} educational concept` : 'educational learning visual graphic';
   }
 
-  const styleGuidesEn: Record<VisualFormatStyle, string> = {
-    simple_drawing: 'isolated minimalist vector line art illustration on pure white background, no background clutter, textbook icon, clean black strokes',
-    photorealistic: 'crisp realistic educational photograph, professional textbook photography, clear central subject, high definition landscape or object, no random people',
-    illustration: 'vibrant clean educational cartoon illustration, child-friendly textbook style, clear outlines, bright colors',
-    diagram: 'clean 2D educational infographic flowchart diagram, structured step by step chart, clear arrows and icons'
+  // 4 Visual Style Descriptions matching the teacher's reference image:
+  // 1. simple_drawing: ✏️ 간단한 그림 (배경 제거) - Isolated vector line art on pure white background
+  // 2. photorealistic: 📸 실사 이미지 - Crisp realistic photograph
+  // 3. illustration: 🎨 일러스트 - Rich warm digital cartoon storybook art
+  // 4. diagram: 📊 단순 도식 - Clean flat 2D vector silhouette infographic
+  const stylePrompts: Record<VisualFormatStyle, string> = {
+    simple_drawing: 'isolated minimalist cute 2D vector line art illustration, isolated on pure solid white background, zero background clutter, clean bold black outline, flat colors, textbook icon style',
+    photorealistic: 'high definition crisp realistic photograph, professional educational textbook photography, real world photo, vivid natural lighting, clear subject matter',
+    illustration: 'vibrant warm digital storybook illustration, Ghibli cartoon style, child friendly textbook artwork, bright cheerful colors, cozy scenery',
+    diagram: 'flat 2D vector silhouette infographic diagram, minimalist geometric chart, step by step educational diagram, clean vector graphic'
   };
 
-  const teacherAddon = teacherPrompt ? `, teacher note: ${teacherPrompt}` : '';
+  const teacherNote = teacherPrompt ? `, note: ${teacherPrompt.replace(/[^\x00-\x7F]/g, ' ')}` : '';
 
-  const positivePrompt = `educational image of ${topicEn}, ${desc}, ${styleGuidesEn[visualStyle]}${teacherAddon}, high resolution, textbook visual, clear educational focus, child safe`;
+  const positivePrompt = `educational visual of ${subjectEn}, ${stylePrompts[visualStyle]}${teacherNote}, high quality, school textbook visual, child safe, highly relevant`;
 
-  const negativePrompt = 'human portrait, random woman, anime girl, female model, selfie, distorted face, adult content, nsfw, inappropriate person, blurry, chaotic background, irrelevant people, messy portrait';
+  const negativePrompt = 'human portrait, asian woman, hanfu, girl face, female model, adult woman, selfie, distorted face, nsfw, inappropriate person, solo female, ugly face';
 
   return { positivePrompt, negativePrompt };
 }
@@ -836,9 +851,9 @@ JSON Schema format:
 
     // 2. High-Quality Real AI Image Fallback (Pollinations AI Engine with Educational Filter)
     try {
-      const seed = Math.floor(Math.random() * 10000);
-      const queryText = `${positivePrompt}`;
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(queryText)}?width=800&height=450&nologo=true&seed=${seed}`;
+      const seed = Math.floor(Math.random() * 89999) + 10000;
+      const fullPrompt = `${positivePrompt}. Negative prompt: ${negativePrompt}`;
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=800&height=450&nologo=true&seed=${seed}&model=flux`;
 
       return {
         id: `vis-ai-${Date.now()}`,

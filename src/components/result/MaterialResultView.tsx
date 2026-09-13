@@ -896,7 +896,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
                   <button
                     type="button"
                     onClick={() => setSelectedStyle('simple_drawing')}
@@ -936,6 +936,18 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                     }`}
                   >
                     <span>🎨 일러스트</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStyle('diagram')}
+                    className={`py-2 px-2 rounded-lg text-xs font-extrabold transition-all border flex items-center justify-center gap-1 cursor-pointer ${
+                      selectedStyle === 'diagram'
+                        ? 'bg-forest-700 text-white border-forest-700 shadow-xs'
+                        : 'bg-white text-charcoal-600 border-border hover:bg-oat-50'
+                    }`}
+                  >
+                    <span>📊 단순 도식</span>
                   </button>
                 </div>
               </div>
