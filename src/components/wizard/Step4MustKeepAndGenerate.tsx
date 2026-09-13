@@ -11,14 +11,6 @@ interface Step4Props {
   onShowToast: (type: 'success' | 'error' | 'info', title: string, desc?: string) => void;
 }
 
-interface SupportGroup {
-  category: string;
-  items: {
-    label: string;
-    text: string;
-  }[];
-}
-
 export const Step4MustKeepAndGenerate: React.FC<Step4Props> = ({ onMaterialGenerated, onShowToast }) => {
   const {
     state,
@@ -32,70 +24,6 @@ export const Step4MustKeepAndGenerate: React.FC<Step4Props> = ({ onMaterialGener
 
   const { user } = useAuth();
   const [showUdlGuideModal, setShowUdlGuideModal] = useState(false);
-
-  const supportGroups: SupportGroup[] = [
-    {
-      category: '개인화',
-      items: [
-        {
-          label: '관심사 반영',
-          text: '학생이 좋아하는 주제나 소재(동물, 캐릭터, 게임 등)를 활용한 친숙한 맥락으로 문제를 구성해주세요.'
-        }
-      ]
-    },
-    {
-      category: '응답 지원',
-      items: [
-        {
-          label: '선택형 응답',
-          text: '학생이 직접 문장을 만들어 답하기 어려우므로 보기 선택지 중 골라서 응답할 수 있도록 구성해주세요.'
-        },
-        {
-          label: '말로 답하기',
-          text: '쓰기 부담을 경감하기 위해 말이나 손가락 지시로 표현할 수 있도록 활동 방식을 조정해주세요.'
-        }
-      ]
-    },
-    {
-      category: '학습 과정 지원',
-      items: [
-        {
-          label: '단계별 힌트',
-          text: '정답을 바로 알려주지 않고 학생이 막혔을 때 단계적으로 확인할 수 있는 힌트를 제공해주세요.'
-        },
-        {
-          label: '자기점검 체크',
-          text: '활동을 마친 뒤 학생이 스스로 수행 여부를 확인할 수 있는 Self-Check 항목을 제공해주세요.'
-        },
-        {
-          label: '추가 연습',
-          text: '같은 학습목표를 한 번 더 단단히 복습할 수 있도록 간단한 추가 연습 문제나 활동을 제공해주세요.'
-        }
-      ]
-    },
-    {
-      category: '상호작용 지원',
-      items: [
-        {
-          label: '짝과 함께하기',
-          text: '혼자 수행하는 활동 중 적절한 부분을 또래 짝과 함께 협동하여 수행할 수 있도록 구성해주세요.'
-        }
-      ]
-    },
-    {
-      category: '교사 지원',
-      items: [
-        {
-          label: '교사용 정답',
-          text: '학생용 자료와 별도로 하단에 교사 정답 또는 지도 참고용 가이드를 제공해주세요.'
-        },
-        {
-          label: '교사 발문',
-          text: '교사가 학생의 생각이나 응답을 촉진할 때 사용할 수 있는 질문이나 촉진 문장을 추가해주세요.'
-        }
-      ]
-    }
-  ];
 
   const handleGenerate = async () => {
     try {
@@ -191,39 +119,6 @@ export const Step4MustKeepAndGenerate: React.FC<Step4Props> = ({ onMaterialGener
           placeholder="예: 말로 답하기 어려우므로 선택해서 답할 수 있게 해주세요."
           className="input-field px-3.5 py-2.5 text-xs resize-none font-sans"
         />
-
-        {/* Categorized Quick Support Chips */}
-        <div className="space-y-3 pt-1">
-          <span className="text-xs font-semibold text-charcoal-500 block">빠른 지원 선택</span>
-
-          <div className="space-y-2.5">
-            {supportGroups.map(group => (
-              <div key={group.category} className="space-y-1">
-                <span className="text-[11px] font-bold text-charcoal-500 tracking-tight">
-                  [{group.category}]
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {group.items.map(item => (
-                    <RichHoverCard key={item.label} dataKey={item.label}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = state.teacherRequest
-                            ? `${state.teacherRequest}\n${item.text}`
-                            : item.text;
-                          setTeacherRequest(updated);
-                        }}
-                        className="chip px-3 py-1.5 text-xs font-medium bg-white hover:bg-forest-50 hover:border-forest-300 text-charcoal-700 border border-border shadow-2xs transition-all cursor-pointer flex items-center gap-1"
-                      >
-                        <span>+ {item.label}</span>
-                      </button>
-                    </RichHoverCard>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ③ 결과물 설정 */}
