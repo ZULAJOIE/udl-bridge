@@ -31,3 +31,6 @@ if (isFirebaseConfigured) {
 
 export { app, auth, db };
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
