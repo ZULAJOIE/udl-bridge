@@ -3,18 +3,20 @@ export type SchoolLevel = 'elementary' | 'middle' | 'high';
 export type UserType =
   | 'special_school_teacher'
   | 'special_class_teacher'
-  | 'inclusive_class_teacher'
-  | 'researcher_admin'
-  | 'other'
-  | 'prefer_not_to_say';
+  | 'general_teacher'
+  | 'researcher'
+  | 'administrator'
+  | 'pre_service_teacher'
+  | 'other';
 
 export const USER_TYPES: Record<UserType, string> = {
   special_school_teacher: '특수학교 교사',
   special_class_teacher: '일반학교 특수학급 교사',
-  inclusive_class_teacher: '통합학급을 운영하는 일반교사',
-  researcher_admin: '특수교육 관련 연구자·관리자',
+  general_teacher: '일반학급 교사',
+  researcher: '교육 관련 연구자',
+  administrator: '교육 관리자',
+  pre_service_teacher: '예비교사',
   other: '기타',
-  prefer_not_to_say: '선택하지 않음',
 };
 
 export interface UserProfile {
@@ -23,6 +25,7 @@ export interface UserProfile {
   displayName: string;
   photoURL?: string;
   userType?: UserType;
+  authType?: 'google' | 'anonymous';
   role: 'teacher' | 'admin';
   createdAt: string;
   lastLoginAt?: string;
@@ -196,6 +199,7 @@ export interface GeneratedMaterial {
   sourceMaterials?: SourceMaterial[];
   pageSize?: 'A4';
   pageOrientation?: 'portrait' | 'landscape';
+  pageLength?: 'auto' | 'a4_1' | 'a4_2';
   summaryNote?: string;
   teacherNote?: string;
   generatedPrompt: string;
@@ -211,6 +215,7 @@ export interface MaterialGenerationInput {
   sourceMaterials?: SourceMaterial[];
   pageSize?: 'A4';
   pageOrientation?: 'portrait' | 'landscape';
+  pageLength?: 'auto' | 'a4_1' | 'a4_2';
 
   primaryNeeds: string[];
   educationalNeeds: string[];
@@ -247,6 +252,7 @@ export interface SavedMaterial {
   sourceMaterials?: SourceMaterial[];
   pageSize?: 'A4';
   pageOrientation?: 'portrait' | 'landscape';
+  pageLength?: 'auto' | 'a4_1' | 'a4_2';
 
   disabilityCategories?: string[];
   educationalNeeds: string[];

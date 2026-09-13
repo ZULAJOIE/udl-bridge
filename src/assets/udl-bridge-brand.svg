@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <!-- Soft background gradient for editorial feel -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF9F5" />
+      <stop offset="50%" stop-color="#F5F8F5" />
+      <stop offset="100%" stop-color="#EAF2EC" />
+    </linearGradient>
+
+    <!-- Bridge Arch Gradient -->
+    <linearGradient id="bridgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2D5A3F" />
+      <stop offset="50%" stop-color="#3D7A56" />
+      <stop offset="100%" stop-color="#4E8C67" />
+    </linearGradient>
+
+    <!-- Warm Glow -->
+    <radialGradient id="sunGlow" cx="50%" cy="40%" r="40%">
+      <stop offset="0%" stop-color="#F2E8D5" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#FBF9F5" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background Layer -->
+  <rect width="800" height="450" fill="url(#bgGradient)" rx="24" />
+  
+  <!-- Subtle Editorial Grid Pattern -->
+  <pattern id="dotPattern" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="12" cy="12" r="1" fill="#2D5A3F" fill-opacity="0.06" />
+  </pattern>
+  <rect width="800" height="450" fill="url(#dotPattern)" rx="24" />
+
+  <!-- Background Warm Glow -->
+  <circle cx="400" cy="180" r="180" fill="url(#sunGlow)" />
+
+  <!-- Stylized Bridge & Pedagogy Motifs -->
+  <g transform="translate(0, -10)">
+    <!-- Bridge Arch (Primary Structure) -->
+    <path d="M 220 230 C 310 140, 490 140, 580 230" 
+          fill="none" 
+          stroke="url(#bridgeGrad)" 
+          stroke-width="12" 
+          stroke-linecap="round" />
+
+    <!-- Secondary Connecting Arch (Parallel Line) -->
+    <path d="M 250 220 C 320 160, 480 160, 550 220" 
+          fill="none" 
+          stroke="#4E8C67" 
+          stroke-width="4" 
+          stroke-dasharray="6,6"
+          stroke-opacity="0.7"
+          stroke-linecap="round" />
+
+    <!-- Vertical Suspension Ribs / Beams -->
+    <line x1="310" y1="183" x2="310" y2="230" stroke="#2D5A3F" stroke-width="2.5" stroke-opacity="0.4" stroke-dasharray="4,4" />
+    <line x1="370" y1="165" x2="370" y2="230" stroke="#2D5A3F" stroke-width="2.5" stroke-opacity="0.4" stroke-dasharray="4,4" />
+    <line x1="430" y1="165" x2="430" y2="230" stroke="#2D5A3F" stroke-width="2.5" stroke-opacity="0.4" stroke-dasharray="4,4" />
+    <line x1="490" y1="183" x2="490" y2="230" stroke="#2D5A3F" stroke-width="2.5" stroke-opacity="0.4" stroke-dasharray="4,4" />
+
+    <!-- Left Pillar (Teaching Pillar) -->
+    <rect x="200" y="210" width="30" height="70" rx="6" fill="#2D5A3F" />
+    <circle cx="215" cy="195" r="14" fill="#2D5A3F" />
+    <path d="M 210 195 L 220 195 M 215 190 L 215 200" stroke="#FBF9F5" stroke-width="2" stroke-linecap="round" />
+
+    <!-- Right Pillar (Learning Pillar) -->
+    <rect x="570" y="210" width="30" height="70" rx="6" fill="#4E8C67" />
+    <circle cx="585" cy="195" r="14" fill="#4E8C67" />
+    <path d="M 579 193 C 582 191, 588 191, 591 193 V 199 C 588 197, 582 197, 579 199 Z" fill="none" stroke="#FBF9F5" stroke-width="1.5" />
+
+    <!-- Bridge Deck Base line -->
+    <line x1="170" y1="260" x2="630" y2="260" stroke="#2D5A3F" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Center Gem Node -->
+    <g transform="translate(400, 155)">
+      <circle cx="0" cy="0" r="10" fill="#2D5A3F" />
+      <circle cx="0" cy="0" r="18" fill="none" stroke="#2D5A3F" stroke-width="1.5" stroke-opacity="0.3" />
+      <polygon points="0,-5 4,4 -4,4" fill="#FBF9F5" />
+    </g>
+
+    <!-- UDL Core Principle Nodes -->
+    <g transform="translate(320, 172)">
+      <circle cx="0" cy="0" r="6" fill="#3D7A56" />
+    </g>
+    <g transform="translate(480, 172)">
+      <circle cx="0" cy="0" r="6" fill="#3D7A56" />
+    </g>
+  </g>
+
+  <!-- Typography & Brand Text -->
+  <g text-anchor="middle" transform="translate(400, 310)">
+    <!-- Brand Name -->
+    <text x="0" y="0" font-family="'Inter', 'Pretendard', system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" letter-spacing="4" fill="#1A3323">
+      UDL·BRIDGE
+    </text>
+    
+    <!-- Subtitle (English) -->
+    <text x="0" y="28" font-family="'Inter', system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#4E8C67">
+      BRIDGING TEACHING &amp; LEARNING
+    </text>
+    
+    <!-- Subtitle (Korean) -->
+    <text x="0" y="54" font-family="'Pretendard', system-ui, sans-serif" font-size="16" font-weight="600" letter-spacing="0.5" fill="#2D5A3F">
+      가르침과 배움을 잇는 다리
+    </text>
+
+    <!-- Decorative divider line -->
+    <line x1="-60" y1="72" x2="60" y2="72" stroke="#2D5A3F" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round" />
+  </g>
+</svg>

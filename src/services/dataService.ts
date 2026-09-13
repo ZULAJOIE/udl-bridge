@@ -169,6 +169,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
         return {
           uid: docSnap.id,
           userType: data.userType,
+          authType: data.authType || 'google',
           role: data.role || 'teacher',
           email: data.email || '',
           displayName: data.displayName || '',
@@ -194,6 +195,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 export async function saveUserProfile(
   uid: string,
   userType: UserType,
+  authType?: 'google' | 'anonymous',
   email?: string,
   displayName?: string,
   role: 'teacher' | 'admin' = 'teacher'
@@ -202,6 +204,7 @@ export async function saveUserProfile(
   const profileData: UserProfile = {
     uid,
     userType,
+    authType: authType || 'google',
     role,
     email: email || '',
     displayName: displayName || '',
@@ -214,10 +217,12 @@ export async function saveUserProfile(
       const docRef = doc(db, 'users', uid);
       await setDoc(docRef, {
         uid,
+        authType: authType || 'google',
         userType,
         role,
         email: email || '',
         displayName: displayName || '',
+        createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       }, { merge: true });
     } catch (e) {

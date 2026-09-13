@@ -22,12 +22,21 @@ export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
         .join('; ')
     : '';
 
+  const orientationText = input.pageOrientation === 'landscape' ? 'A4 가로형 (297 × 210mm)' : 'A4 세로형 (210 × 297mm)';
+  const lengthText = input.pageLength === 'a4_1'
+    ? 'A4 1장 (한 페이지 완결 배치)'
+    : input.pageLength === 'a4_2'
+    ? 'A4 2장 이상 (여유로운 글씨/여백 및 심화/복습 활동 추가)'
+    : '자동 (내용량에 맞춘 1~2페이지 조절)';
+
   return `당신은 특수교육 및 UDL(보편적 학습 설계) 기반 교수적 수정 전문가입니다.
 
-[1. 학습자료 기본 정보]
+[1. 학습자료 기본 정보 및 용지 설정]
 - 학교급: ${schoolText}학교
 - 교과: ${input.subject}
 - 단원/주제: ${input.topic || '교과서 주요 학습 내용'}
+- 용지 방향: ${orientationText}
+- 결과물 분량 설정: ${lengthText}
 - 원본 파일 첨부: ${input.file ? `${input.file.name} (${input.file.type.toUpperCase()})` : '없음'}
 
 [2. 학생 특성 및 교육적 요구]
@@ -280,6 +289,23 @@ export class MockAIProvider implements AIProvider {
       }
     ];
 
+    if (input.pageLength === 'a4_2') {
+      activities.push({
+        id: 'act-4',
+        type: 'activity' as const,
+        title: '4. 심화 복습 및 생각 넓히기 (A4 2장 이상 확장)',
+        content: `[스스로 체크하기]\n☑ 식물이 밥(양분)을 만드는 데 꼭 필요한 빛의 이름을 써보세요: (                 )\n☑ 식물 잎에서 새로 만들어져 나오는 기체는 ( 산소 / 이산화탄소 )입니다.`,
+        hint: '힌트: 낮에 하늘에 뜨는 따뜻한 빛을 생각해보세요!'
+      });
+      activities.push({
+        id: 'act-5',
+        type: 'activity' as const,
+        title: '5. 짝꿍과 함께하는 또래 협동 활동',
+        content: `🤝 짝과 역할을 나누어 돋보기로 실제 식물 잎을 관찰해 봅시다.\nㆍ 짝꿍: 식물 잎을 움직이지 않게 잡아줍니다.\nㆍ 나: 돋보기로 관찰한 모양에 ◯ 표를 해보세요. ( [  ] 넓은 잎  /  [  ] 뾰족한 잎 )`,
+        hint: '힌트: 짝꿍과 역할을 차례대로 바꾸어 관찰해보세요!'
+      });
+    }
+
     const keywords = ['광합성', '햇빛', '물', '이산화탄소', '양분'];
 
     // Provide 2 Visual Suggestions for Teacher to optionally click [✨ 그림 생성하기]
@@ -304,6 +330,8 @@ export class MockAIProvider implements AIProvider {
       }
     ];
 
+    const pageLengthDesc = input.pageLength === 'a4_1' ? 'A4 1장 맞춤' : input.pageLength === 'a4_2' ? 'A4 2장 이상' : '자동 분량';
+
     const baseResult: GeneratedMaterial = {
       id: `mat-${Date.now()}`,
       title: `[학생용 교수적 수정] ${schoolText} ${input.subject} - ${topicTitle}`,
@@ -317,7 +345,10 @@ export class MockAIProvider implements AIProvider {
       activities,
       visualSuggestions,
       visuals: [], // Initially empty! Teacher must explicitly click [✨ 그림 생성하기]
-      summaryNote: `적용된 교수적 수정: ${levelText}`,
+      pageSize: input.pageSize || 'A4',
+      pageOrientation: input.pageOrientation || 'portrait',
+      pageLength: input.pageLength || 'auto',
+      summaryNote: `적용된 교수적 수정: ${levelText} | 설정 분량: ${pageLengthDesc}`,
       teacherNote: input.teacherRequest ? `교사 추가 요청 반영: ${input.teacherRequest}` : '정답: 1. 핵심 개념 (햇빛) / 2. 연결 활동 (햇빛-빛, 물-뿌리) / 3. 확인 문제 (3번 얼음 조각)',
       generatedPrompt,
       createdAt: new Date().toLocaleString('ko-KR', { hour12: false })

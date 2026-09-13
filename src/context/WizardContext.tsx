@@ -21,6 +21,7 @@ interface WizardState {
   sourceMaterials: SourceMaterial[];
   pageSize: 'A4';
   pageOrientation: 'portrait' | 'landscape';
+  pageLength: 'auto' | 'a4_1' | 'a4_2';
 
   primaryNeeds: string[]; // 8 simplified chips
   detailedNeeds: string[]; // PRD category needs
@@ -62,6 +63,7 @@ interface WizardContextType {
   setMaterialFile: (file: MaterialFile | null) => void;
   setSourceMaterials: (sources: SourceMaterial[]) => void;
   setPageOrientation: (orientation: 'portrait' | 'landscape') => void;
+  setPageLength: (length: 'auto' | 'a4_1' | 'a4_2') => void;
 
   togglePrimaryNeed: (chipId: string) => void;
   toggleDetailedNeed: (need: string) => void;
@@ -101,6 +103,7 @@ const INITIAL_STATE: WizardState = {
   sourceMaterials: [],
   pageSize: 'A4',
   pageOrientation: 'portrait',
+  pageLength: 'auto',
   primaryNeeds: ['긴 글을 끝까지 읽기 어려워해요', '어려운 단어의 뜻을 이해하기 어려워해요', '여러 단계의 지시를 한 번에 수행하기 어려워해요'],
   detailedNeeds: ['긴 글 이해가 어려움', '어려운 어휘를 이해하기 어려움'],
   disabilityCategories: [],
@@ -168,6 +171,10 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const setPageOrientation = (pageOrientation: 'portrait' | 'landscape') => {
     setState(prev => ({ ...prev, pageOrientation }));
+  };
+
+  const setPageLength = (pageLength: 'auto' | 'a4_1' | 'a4_2') => {
+    setState(prev => ({ ...prev, pageLength }));
   };
 
   const togglePrimaryNeed = (chipId: string) => {
@@ -339,6 +346,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         sourceMaterials: state.sourceMaterials,
         pageSize: state.pageSize,
         pageOrientation: state.pageOrientation,
+        pageLength: state.pageLength,
         primaryNeeds: state.primaryNeeds,
         educationalNeeds: state.detailedNeeds,
         disabilityCategories: state.disabilityCategories,
@@ -356,7 +364,8 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         ...result,
         sourceMaterials: state.sourceMaterials,
         pageSize: state.pageSize,
-        pageOrientation: state.pageOrientation
+        pageOrientation: state.pageOrientation,
+        pageLength: state.pageLength
       };
 
       setState(prev => ({
@@ -409,6 +418,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       sourceMaterials: loadedSource,
       pageSize: material.pageSize || 'A4',
       pageOrientation: material.pageOrientation || 'portrait',
+      pageLength: material.pageLength || 'auto',
       primaryNeeds: material.educationalNeeds || [],
       detailedNeeds: [],
       disabilityCategories: material.disabilityCategories || [],
@@ -442,6 +452,7 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setMaterialFile,
         setSourceMaterials,
         setPageOrientation,
+        setPageLength,
         togglePrimaryNeed,
         toggleDetailedNeed,
         toggleDisabilityCategory,

@@ -80,3 +80,24 @@
     radial-gradient(circle at 15% 20%, rgba(137, 154, 130, 0.07), transparent 45%),
     radial-gradient(circle at 85% 65%, rgba(154, 128, 108, 0.06), transparent 50%);
 }
+
+/* Organic, slow breathing floating animation for UDL-Bridge brand logo */
+@keyframes gentleFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.brand-logo-gentle-float {
+  animation: gentleFloat 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-gentle-float {
+    animation: none !important;
+  }
+}

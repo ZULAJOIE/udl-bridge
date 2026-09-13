@@ -15,6 +15,7 @@ import { StudentDocumentRenderer } from '../document/StudentDocumentRenderer';
 import { FloatingReferenceWindow } from './FloatingReferenceWindow';
 import { defaultAiProvider } from '../../services/aiProvider';
 import { Tooltip } from '../common/Tooltip';
+import { RichHoverCard } from '../common/RichHoverCard';
 import {
   FileText, Sparkles, Edit3, BookmarkPlus, Copy, RefreshCw, Check, ArrowLeft, Wand2,
   Download, Code, Eye, Plus, Minus, X, Image as ImageIcon, Trash2, Upload
@@ -118,9 +119,14 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
           }
         ];
 
+  const isLandscape = (material?.pageOrientation || state.pageOrientation) === 'landscape';
+
   // Real-Time Consolidated Content Model
   const currentLatestContent: GeneratedMaterial = {
     ...material,
+    pageSize: material?.pageSize || state.pageSize || 'A4',
+    pageOrientation: material?.pageOrientation || state.pageOrientation || 'portrait',
+    pageLength: material?.pageLength || state.pageLength || 'auto',
     title: editedTitle,
     coreConcept: editedConcept,
     keywords: editedKeywords,
@@ -402,7 +408,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
   // Zoom controls for center A4 document preview
   const getZoomScale = (): number => {
-    if (zoomLevel === 'fit') return 0.65;
+    if (zoomLevel === 'fit') return isLandscape ? 0.45 : 0.50;
     return zoomLevel;
   };
 
@@ -562,20 +568,20 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
         /* Result Tab: Main Grid (A4 Document Preview + Editing Panel) */
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-          {/* Center Column: A4 Live Document Preview (7/12 cols) */}
-          <div className="lg:col-span-7 space-y-3">
+          {/* Left Column: A4 Live Document Preview (5/12 cols on lg, 4/12 on xl) */}
+          <div className="lg:col-span-5 xl:col-span-4 space-y-3">
             {/* Top Zoom Controller Bar */}
             <div className="flex items-center justify-between bg-surface px-4 py-3 rounded-xl border border-border shadow-sm">
               <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-sage-700" />
-                <span className="text-xs font-bold text-charcoal-600">A4 학습지 미리보기</span>
-                <span className="text-[11px] text-charcoal-400 font-mono hidden sm:inline">
-                  (📄 {material.pageOrientation === 'landscape' ? 'A4 가로형' : 'A4 세로형 210:297'})
+                <Eye className="w-4 h-4 text-sage-700 shrink-0" />
+                <span className="text-xs font-bold text-charcoal-600 truncate">A4 미리보기</span>
+                <span className="text-[11px] text-charcoal-400 font-mono hidden xl:inline">
+                  (📄 {isLandscape ? '가로형' : '세로형'})
                 </span>
               </div>
 
-              {/* [−] 67% [+] [페이지 맞춤] Zoom Controller */}
-              <div className="flex items-center gap-1.5 bg-oat-50 px-2.5 py-1 rounded-lg border border-border text-xs">
+              {/* [−] 50% [+] [페이지 맞춤] Zoom Controller */}
+              <div className="flex items-center gap-1 bg-oat-50 px-2 py-1 rounded-lg border border-border text-xs shrink-0">
                 <button
                   type="button"
                   onClick={handleZoomOut}
@@ -584,8 +590,8 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 >
                   <Minus className="w-3.5 h-3.5" />
                 </button>
-                <span className="px-2 font-mono font-bold text-forest-700 min-w-[55px] text-center">
-                  {zoomLevel === 'fit' ? '67%' : `${Math.round(getZoomScale() * 100)}%`}
+                <span className="px-1.5 font-mono font-bold text-forest-700 min-w-[45px] text-center text-xs">
+                  {`${Math.round(getZoomScale() * 100)}%`}
                 </span>
                 <button
                   type="button"
@@ -595,23 +601,23 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
-                <div className="h-3.5 w-[1px] bg-border mx-1" />
+                <div className="h-3.5 w-[1px] bg-border mx-0.5" />
                 <button
                   type="button"
                   onClick={handleFitPage}
-                  className={`px-2.5 py-0.5 rounded-md text-[11px] font-extrabold transition-all ${
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-extrabold transition-all ${
                     zoomLevel === 'fit'
                       ? 'bg-sage-100 text-sage-800 border border-sage-300'
                       : 'text-charcoal-500 hover:text-charcoal'
                   }`}
                 >
-                  페이지 맞춤
+                  맞춤
                 </button>
               </div>
             </div>
 
             {/* A4 Preview Container with Interactive Selection & Placeholders */}
-            <div className="bg-oat-50 p-4 sm:p-6 rounded-xl border border-border flex flex-col items-center justify-start min-h-[760px] relative overflow-hidden">
+            <div className="bg-oat-50 p-3 sm:p-4 rounded-xl border border-border flex flex-col items-center justify-start min-h-[760px] relative overflow-hidden">
               <div
                 className={`w-full flex justify-center transition-all duration-200 ${
                   zoomLevel === 'fit' ? 'overflow-hidden max-h-[740px]' : 'overflow-auto max-h-[780px] p-2'
@@ -621,8 +627,8 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                   className="origin-top transition-transform duration-200 shadow-md"
                   style={{
                     transform: `scale(${getZoomScale()})`,
-                    width: '210mm',
-                    minHeight: '297mm'
+                    width: isLandscape ? '297mm' : '210mm',
+                    minHeight: isLandscape ? '210mm' : '297mm'
                   }}
                 >
                   <StudentDocumentRenderer
@@ -638,8 +644,8 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Editing Panel (5/12 cols) */}
-          <div className="lg:col-span-5 card p-5 space-y-5 shadow-sm sticky top-24 max-h-[860px] overflow-y-auto">
+          {/* Right Column: Direct Editing Panel (7/12 cols on lg, 8/12 on xl) */}
+          <div className="lg:col-span-7 xl:col-span-8 card p-5 space-y-5 shadow-sm lg:sticky lg:top-24 max-h-[880px] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <span className="text-xs font-bold text-charcoal flex items-center gap-1.5">
                 <Edit3 className="w-4 h-4 text-brown-600" />
@@ -652,7 +658,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 className="btn-primary px-3.5 py-1.5 text-xs font-extrabold"
               >
                 <BookmarkPlus className="w-3.5 h-3.5" />
-                <span>저장하기</span>
+                <span>{saving ? '임시저장 중...' : '임시저장'}</span>
               </button>
             </div>
 
@@ -732,7 +738,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 className="input-field p-3 text-xs leading-relaxed resize-none font-sans"
               />
               <div className="flex flex-wrap gap-1.5 pt-1">
-                <Tooltip content="본문 내용을 쉬운 어휘와 직관적인 문장으로 AI가 재작성하여 기존 블록을 교체합니다." position="top">
+                <RichHoverCard dataKey="더 쉽게">
                   <button
                     type="button"
                     onClick={() => handleBlockRewrite('simplify')}
@@ -742,9 +748,9 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                     <Wand2 className="w-3.5 h-3.5" />
                     <span>{rewritingAction === 'simplify' ? '✨ 수정 중...' : '더 쉽게'}</span>
                   </button>
-                </Tooltip>
+                </RichHoverCard>
 
-                <Tooltip content="핵심 원리는 보존하면서 본문 문장 길이를 축약해 재작성합니다." position="top">
+                <RichHoverCard dataKey="더 짧게">
                   <button
                     type="button"
                     onClick={() => handleBlockRewrite('shorten')}
@@ -754,9 +760,9 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                     <Wand2 className="w-3.5 h-3.5" />
                     <span>{rewritingAction === 'shorten' ? '✨ 수정 중...' : '더 짧게'}</span>
                   </button>
-                </Tooltip>
+                </RichHoverCard>
 
-                <Tooltip content="기존 본문 아래에 학생이 이해하기 쉬운 구체적 사례를 추가합니다." position="top">
+                <RichHoverCard dataKey="예시 추가">
                   <button
                     type="button"
                     onClick={() => handleBlockRewrite('add_example')}
@@ -766,7 +772,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                     <Wand2 className="w-3.5 h-3.5" />
                     <span>{rewritingAction === 'add_example' ? '✨ 수정 중...' : '예시 추가'}</span>
                   </button>
-                </Tooltip>
+                </RichHoverCard>
               </div>
             </div>
 
@@ -905,7 +911,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
                       {/* Dual Actions: [✨ AI로 생성] [↑ 내 이미지 추가] */}
                       <div className="grid grid-cols-2 gap-2 pt-1">
-                        <Tooltip content="시각자료 Level과 세부 전략에 맞춰 AI가 최적화된 사진/그림을 생성합니다." position="top">
+                        <RichHoverCard dataKey="✨ AI로 생성">
                           <button
                             type="button"
                             onClick={() => handleGenerateVisual(sugg, selectedStyle)}
@@ -915,9 +921,9 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>{isGenerating ? '생성 중...' : '✨ AI로 생성'}</span>
                           </button>
-                        </Tooltip>
+                        </RichHoverCard>
 
-                        <Tooltip content="선생님이 소장하신 JPG, PNG 이미지 파일을 직접 업로드하여 해당 자리에 삽입합니다." position="top">
+                        <RichHoverCard dataKey="↑ 내 이미지 추가">
                           <button
                             type="button"
                             onClick={() => handleTriggerTeacherImageUpload(sugg)}
@@ -926,7 +932,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                             <Upload className="w-3.5 h-3.5" />
                             <span>↑ 내 이미지 추가</span>
                           </button>
-                        </Tooltip>
+                        </RichHoverCard>
                       </div>
 
                       {/* Visual Format Style Picker (For AI generation) */}

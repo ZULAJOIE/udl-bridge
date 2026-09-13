@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWizard } from '../../context/WizardContext';
-import { ModificationLevel, StrategyItem, StrategyRelation } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { ModificationLevel, StrategyItem, StrategyRelation, SupportRecommendationResult } from '../../types';
 import {
   TEXT_MODIFICATION_LEVELS,
   ALL_TEXT_STRATEGIES,
@@ -13,11 +14,13 @@ import {
   VISUAL_STRATEGY_CATEGORY_ORDER,
   VISUAL_STRATEGY_RELATIONS,
   findStrategyByLabel,
-  findStrategyRelation
+  findStrategyRelation,
+  recommendSupportsForDifficulties
 } from '../../data/udlData';
-import { FileText, Image as ImageIcon, Sparkles, Plus, Minus, AlertTriangle, Info, X } from 'lucide-react';
+import { FileText, Image as ImageIcon, Sparkles, Plus, Minus, AlertTriangle, Info, X, AlertCircle } from 'lucide-react';
 import { StrategyInfoPopover } from './StrategyInfoPopover';
 import { StrategyCheckModal } from './StrategyCheckModal';
+import { RichHoverCard } from '../common/RichHoverCard';
 
 const TEXT_SHORT_NAMES: Record<ModificationLevel, string> = {
   1: '원문 유지',
@@ -100,11 +103,41 @@ export const Step3ModificationLevel: React.FC = () => {
     toggleTextStrategy,
     setVisualModificationLevel,
     toggleVisualStrategy,
-    addStrategyResolution
+    addStrategyResolution,
+    applyRecommendedSupports
   } = useWizard();
+
+  const { user } = useAuth();
 
   const [showExtraTextStrats, setShowExtraTextStrats] = useState(false);
   const [showExtraVisualStrats, setShowExtraVisualStrats] = useState(false);
+
+  // AI Support Recommendation Modal State
+  const [showAiRecModal, setShowAiRecModal] = useState(false);
+  const [modalRecResult, setModalRecResult] = useState<SupportRecommendationResult | null>(null);
+  const [selectedRecTextStrats, setSelectedRecTextStrats] = useState<string[]>([]);
+  const [selectedRecVisualStrats, setSelectedRecVisualStrats] = useState<string[]>([]);
+
+  const handleOpenAiRecModal = () => {
+    const rec = recommendSupportsForDifficulties(state.primaryNeeds);
+    setModalRecResult(rec);
+    setSelectedRecTextStrats(rec.textStrategies);
+    setSelectedRecVisualStrats(rec.visualStrategies);
+    setShowAiRecModal(true);
+  };
+
+  const handleApplyRecommendationModal = () => {
+    if (!modalRecResult) return;
+    const rejectedTextStrategies = modalRecResult.textStrategies.filter(s => !selectedRecTextStrats.includes(s));
+    const rejectedVisualStrategies = modalRecResult.visualStrategies.filter(s => !selectedRecVisualStrats.includes(s));
+
+    applyRecommendedSupports(
+      { ...modalRecResult, textStrategies: selectedRecTextStrats, visualStrategies: selectedRecVisualStrats },
+      { rejectedTextStrategies, rejectedVisualStrategies },
+      user?.uid
+    );
+    setShowAiRecModal(false);
+  };
 
   // Degree(level)-vs-strategy warning (existing behavior, unchanged)
   const [pendingConflict, setPendingConflict] = useState<ConflictModalInfo | null>(null);
@@ -264,19 +297,30 @@ export const Step3ModificationLevel: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <div className="flex items-center gap-2 text-forest-700 font-semibold text-xs uppercase tracking-wider mb-1">
-          <span>STEP 3</span>
-          <span>•</span>
-          <span>수정 정도 및 방법</span>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-forest-700 font-semibold text-xs uppercase tracking-wider mb-1">
+            <span>STEP 3</span>
+            <span>•</span>
+            <span>수정 정도 및 방법</span>
+          </div>
+          <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
+            <FileText className="w-5 h-5 text-forest-600" />
+            글과 시각자료를 얼마나 수정할까요?
+          </h2>
+          <p className="text-xs text-charcoal-500 mt-1">
+            자료를 얼마나 수정할지 정하고, 적용할 세부 수정 방법을 선택하세요.
+          </p>
         </div>
-        <h2 className="text-xl font-bold text-charcoal flex items-center gap-2">
-          <FileText className="w-5 h-5 text-forest-600" />
-          글과 시각자료를 얼마나 수정할까요?
-        </h2>
-        <p className="text-xs text-charcoal-500 mt-1">
-          자료를 얼마나 수정할지 정하고, 적용할 세부 수정 방법을 선택하세요.
-        </p>
+
+        <button
+          type="button"
+          onClick={handleOpenAiRecModal}
+          className="btn-ai px-3 py-1.5 text-xs font-bold flex items-center gap-1.5 shrink-0 shadow-sm transition-all"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>✨ AI 추천</span>
+        </button>
       </div>
 
       {/* 1. TEXT MODIFICATION LEVEL SECTION */}
@@ -300,20 +344,21 @@ export const Step3ModificationLevel: React.FC = () => {
           {levels.map(lvl => {
             const isSelected = state.textModificationLevel === lvl;
             return (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => setTextModificationLevel(lvl)}
-                className={`py-2.5 px-1 rounded-md transition-all flex items-center justify-center ${
-                  isSelected
-                    ? 'bg-forest-600 text-white font-bold'
-                    : 'text-charcoal-500 hover:text-charcoal hover:bg-white font-medium'
-                }`}
-              >
-                <span className="text-[11px] leading-tight font-semibold truncate max-w-full">
-                  {TEXT_SHORT_NAMES[lvl]}
-                </span>
-              </button>
+              <RichHoverCard key={lvl} dataKey={TEXT_SHORT_NAMES[lvl]}>
+                <button
+                  type="button"
+                  onClick={() => setTextModificationLevel(lvl)}
+                  className={`w-full py-2.5 px-1 rounded-md transition-all flex items-center justify-center ${
+                    isSelected
+                      ? 'bg-forest-600 text-white font-bold'
+                      : 'text-charcoal-500 hover:text-charcoal hover:bg-white font-medium'
+                  }`}
+                >
+                  <span className="text-[11px] leading-tight font-semibold truncate max-w-full">
+                    {TEXT_SHORT_NAMES[lvl]}
+                  </span>
+                </button>
+              </RichHoverCard>
             );
           })}
         </div>
@@ -339,31 +384,29 @@ export const Step3ModificationLevel: React.FC = () => {
               const isAiRec = state.lastRecommendedTextStrats.includes(strat.label);
 
               return (
-                <div
-                  key={strat.id || strat.label}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleTextStrategyToggle(strat)}
-                  onKeyDown={onChipKeyActivate(() => handleTextStrategyToggle(strat))}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
-                    isSelected
-                      ? 'bg-forest-600 text-white border-forest-600 font-bold'
-                      : 'bg-white hover:bg-oat-50 text-charcoal-500 border-border'
-                  }`}
-                >
-                  <span className={`text-xs font-extrabold ${isSelected ? 'text-white' : 'text-charcoal-300'}`}>
-                    {isSelected ? '✓' : '+'}
-                  </span>
-                  <span>{strat.label}</span>
-                  <span className={isSelected ? 'text-white' : 'text-charcoal-400'}>
-                    <StrategyInfoPopover strategy={strat} accent="forest" />
-                  </span>
-                  {isAiRec && (
-                    <span className="badge-ai px-1.5 py-0.2">
-                      <Sparkles className="w-2.5 h-2.5" /> 추천
+                <RichHoverCard key={strat.id || strat.label} dataKey={strat.label}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleTextStrategyToggle(strat)}
+                    onKeyDown={onChipKeyActivate(() => handleTextStrategyToggle(strat))}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
+                      isSelected
+                        ? 'bg-forest-600 text-white border-forest-600 font-bold'
+                        : 'bg-white hover:bg-oat-50 text-charcoal-500 border-border'
+                    }`}
+                  >
+                    <span className={`text-xs font-extrabold ${isSelected ? 'text-white' : 'text-charcoal-300'}`}>
+                      {isSelected ? '✓' : '+'}
                     </span>
-                  )}
-                </div>
+                    <span>{strat.label}</span>
+                    {isAiRec && (
+                      <span className="badge-ai px-1.5 py-0.2">
+                        <Sparkles className="w-2.5 h-2.5" /> 추천
+                      </span>
+                    )}
+                  </div>
+                </RichHoverCard>
               );
             })}
           </div>
@@ -407,24 +450,22 @@ export const Step3ModificationLevel: React.FC = () => {
                     {group.items.map(strat => {
                       const isSelected = state.textStrategies.includes(strat.label);
                       return (
-                        <div
-                          key={strat.id}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => handleTextStrategyToggle(strat)}
-                          onKeyDown={onChipKeyActivate(() => handleTextStrategyToggle(strat))}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
-                            isSelected
-                              ? 'bg-forest-600 text-white border-forest-600 font-bold'
-                              : 'bg-white hover:bg-oat-100 text-charcoal-500 border-border'
-                          }`}
-                        >
-                          <span className={isSelected ? 'text-white' : 'text-charcoal-300'}>{isSelected ? '✓' : '+'}</span>
-                          <span>{strat.label}</span>
-                          <span className={isSelected ? 'text-white' : 'text-charcoal-400'}>
-                            <StrategyInfoPopover strategy={strat} accent="forest" />
-                          </span>
-                        </div>
+                        <RichHoverCard key={strat.id} dataKey={strat.label}>
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => handleTextStrategyToggle(strat)}
+                            onKeyDown={onChipKeyActivate(() => handleTextStrategyToggle(strat))}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
+                              isSelected
+                                ? 'bg-forest-600 text-white border-forest-600 font-bold'
+                                : 'bg-white hover:bg-oat-100 text-charcoal-500 border-border'
+                            }`}
+                          >
+                            <span className={isSelected ? 'text-white' : 'text-charcoal-300'}>{isSelected ? '✓' : '+'}</span>
+                            <span>{strat.label}</span>
+                          </div>
+                        </RichHoverCard>
                       );
                     })}
                   </div>
@@ -456,20 +497,21 @@ export const Step3ModificationLevel: React.FC = () => {
           {levels.map(lvl => {
             const isSelected = state.visualModificationLevel === lvl;
             return (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => setVisualModificationLevel(lvl)}
-                className={`py-2.5 px-1 rounded-md transition-all flex items-center justify-center ${
-                  isSelected
-                    ? 'bg-sage-600 text-white font-bold'
-                    : 'text-charcoal-500 hover:text-charcoal hover:bg-white font-medium'
-                }`}
-              >
-                <span className="text-[11px] leading-tight font-semibold truncate max-w-full">
-                  {VISUAL_SHORT_NAMES[lvl]}
-                </span>
-              </button>
+              <RichHoverCard key={lvl} dataKey={VISUAL_SHORT_NAMES[lvl]}>
+                <button
+                  type="button"
+                  onClick={() => setVisualModificationLevel(lvl)}
+                  className={`w-full py-2.5 px-1 rounded-md transition-all flex items-center justify-center ${
+                    isSelected
+                      ? 'bg-sage-600 text-white font-bold'
+                      : 'text-charcoal-500 hover:text-charcoal hover:bg-white font-medium'
+                  }`}
+                >
+                  <span className="text-[11px] leading-tight font-semibold truncate max-w-full">
+                    {VISUAL_SHORT_NAMES[lvl]}
+                  </span>
+                </button>
+              </RichHoverCard>
             );
           })}
         </div>
@@ -495,31 +537,29 @@ export const Step3ModificationLevel: React.FC = () => {
               const isAiRec = state.lastRecommendedVisualStrats.includes(strat.label);
 
               return (
-                <div
-                  key={strat.id || strat.label}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => handleVisualStrategyToggle(strat)}
-                  onKeyDown={onChipKeyActivate(() => handleVisualStrategyToggle(strat))}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
-                    isSelected
-                      ? 'bg-sage-600 text-white border-sage-600 font-bold'
-                      : 'bg-white hover:bg-oat-50 text-charcoal-500 border-border'
-                  }`}
-                >
-                  <span className={`text-xs font-extrabold ${isSelected ? 'text-white' : 'text-charcoal-300'}`}>
-                    {isSelected ? '✓' : '+'}
-                  </span>
-                  <span>{strat.label}</span>
-                  <span className={isSelected ? 'text-white' : 'text-charcoal-400'}>
-                    <StrategyInfoPopover strategy={strat} accent="sage" />
-                  </span>
-                  {isAiRec && (
-                    <span className="badge-ai px-1.5 py-0.2">
-                      <Sparkles className="w-2.5 h-2.5" /> 추천
+                <RichHoverCard key={strat.id || strat.label} dataKey={strat.label}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleVisualStrategyToggle(strat)}
+                    onKeyDown={onChipKeyActivate(() => handleVisualStrategyToggle(strat))}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
+                      isSelected
+                        ? 'bg-sage-600 text-white border-sage-600 font-bold'
+                        : 'bg-white hover:bg-oat-50 text-charcoal-500 border-border'
+                    }`}
+                  >
+                    <span className={`text-xs font-extrabold ${isSelected ? 'text-white' : 'text-charcoal-300'}`}>
+                      {isSelected ? '✓' : '+'}
                     </span>
-                  )}
-                </div>
+                    <span>{strat.label}</span>
+                    {isAiRec && (
+                      <span className="badge-ai px-1.5 py-0.2">
+                        <Sparkles className="w-2.5 h-2.5" /> 추천
+                      </span>
+                    )}
+                  </div>
+                </RichHoverCard>
               );
             })}
           </div>
@@ -563,24 +603,22 @@ export const Step3ModificationLevel: React.FC = () => {
                     {group.items.map(strat => {
                       const isSelected = state.visualStrategies.includes(strat.label);
                       return (
-                        <div
-                          key={strat.id}
-                          role="button"
-                          tabIndex={0}
-                          onClick={() => handleVisualStrategyToggle(strat)}
-                          onKeyDown={onChipKeyActivate(() => handleVisualStrategyToggle(strat))}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
-                            isSelected
-                              ? 'bg-sage-600 text-white border-sage-600 font-bold'
-                              : 'bg-white hover:bg-oat-100 text-charcoal-500 border-border'
-                          }`}
-                        >
-                          <span className={isSelected ? 'text-white' : 'text-charcoal-300'}>{isSelected ? '✓' : '+'}</span>
-                          <span>{strat.label}</span>
-                          <span className={isSelected ? 'text-white' : 'text-charcoal-400'}>
-                            <StrategyInfoPopover strategy={strat} accent="sage" />
-                          </span>
-                        </div>
+                        <RichHoverCard key={strat.id} dataKey={strat.label}>
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => handleVisualStrategyToggle(strat)}
+                            onKeyDown={onChipKeyActivate(() => handleVisualStrategyToggle(strat))}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer select-none ${
+                              isSelected
+                                ? 'bg-sage-600 text-white border-sage-600 font-bold'
+                                : 'bg-white hover:bg-oat-100 text-charcoal-500 border-border'
+                            }`}
+                          >
+                            <span className={isSelected ? 'text-white' : 'text-charcoal-300'}>{isSelected ? '✓' : '+'}</span>
+                            <span>{strat.label}</span>
+                          </div>
+                        </RichHoverCard>
                       );
                     })}
                   </div>
@@ -639,6 +677,142 @@ export const Step3ModificationLevel: React.FC = () => {
               >
                 그래도 추가
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* NEW: AI RECOMMENDATION MODAL */}
+      {showAiRecModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-surface border border-sage-300 rounded-xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2 text-sage-800 font-bold text-base">
+                <Sparkles className="w-5 h-5 text-sage-600 shrink-0" />
+                <span>학생 어려움 기반 AI 추천</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAiRecModal(false)}
+                className="text-charcoal-400 hover:text-charcoal p-1 rounded-lg hover:bg-oat-100 transition-colors"
+                aria-label="닫기"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            {state.primaryNeeds.length === 0 ? (
+              <div className="p-5 rounded-xl bg-oat-50 border border-border text-center space-y-2">
+                <AlertCircle className="w-7 h-7 text-brown-500 mx-auto" />
+                <p className="text-xs sm:text-sm text-charcoal-800 font-bold">
+                  선택된 학생 어려움이 없습니다
+                </p>
+                <p className="text-xs text-charcoal-500 leading-relaxed max-w-xs mx-auto">
+                  STEP 2에서 학생이 겪는 어려움을 선택해 주시면, AI가 맞춤형 교수적 수정 방법을 자동으로 추천해 드립니다.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-3 rounded-lg bg-sage-50 border border-sage-200 text-xs text-sage-900 space-y-1">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <span>🎯 선택된 학생 어려움 ({state.primaryNeeds.length}개)</span>
+                  </p>
+                  <p className="text-[11px] text-sage-700 font-medium">
+                    {state.primaryNeeds.join(', ')}
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-2 text-[11px] text-brown-700 bg-brown-50 p-2.5 rounded-lg border border-brown-100">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>이 추천은 장애유형을 진단하지 않으며, 교사가 관찰한 어려움을 바탕으로 한 교수설계 제안입니다. 필요에 따라 항목을 선택/해제하세요.</span>
+                </div>
+
+                {/* Text Strategies */}
+                {modalRecResult && modalRecResult.textStrategies.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-charcoal-600 block">글 자료 추천 수정 방법</span>
+                    <div className="flex flex-wrap gap-2">
+                      {modalRecResult.textStrategies.map(label => {
+                        const checked = selectedRecTextStrats.includes(label);
+                        return (
+                          <label
+                            key={label}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer flex items-center gap-1.5 transition-colors ${
+                              checked ? 'bg-forest-600 text-white border-forest-600 font-bold' : 'bg-white border-border text-charcoal-400 line-through'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setSelectedRecTextStrats(prev =>
+                                  prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]
+                                );
+                              }}
+                              className="w-3.5 h-3.5 accent-forest-600"
+                            />
+                            <span>{label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Visual Strategies */}
+                {modalRecResult && modalRecResult.visualStrategies.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-charcoal-600 block">그림·시각자료 추천 수정 방법</span>
+                    <div className="flex flex-wrap gap-2">
+                      {modalRecResult.visualStrategies.map(label => {
+                        const checked = selectedRecVisualStrats.includes(label);
+                        return (
+                          <label
+                            key={label}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer flex items-center gap-1.5 transition-colors ${
+                              checked ? 'bg-sage-600 text-white border-sage-600 font-bold' : 'bg-white border-border text-charcoal-400 line-through'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setSelectedRecVisualStrats(prev =>
+                                  prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]
+                                );
+                              }}
+                              className="w-3.5 h-3.5 accent-sage-600"
+                            />
+                            <span>{label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setShowAiRecModal(false)}
+                className="btn-secondary px-4 py-2 text-xs"
+              >
+                닫기
+              </button>
+              {state.primaryNeeds.length > 0 && modalRecResult && (
+                <button
+                  type="button"
+                  onClick={handleApplyRecommendationModal}
+                  className="btn-primary px-4 py-2 text-xs flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>선택한 추천 방법 적용</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

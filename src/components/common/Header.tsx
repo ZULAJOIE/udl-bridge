@@ -93,17 +93,26 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowT
 
             {user ? (
               <div className="flex items-center gap-2">
+                {user.authType === 'anonymous' && (
+                  <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="hidden sm:inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors"
+                  >
+                    <span>체험 중 (계정 연결)</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => setShowProfileModal(true)}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white hover:bg-oat-50 border border-border transition-colors text-right"
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F8F5] border border-border transition-colors text-right"
                   title="내 정보 / 프로필 설정"
                 >
-                  <div className="w-7 h-7 rounded-md bg-sage-100 border border-sage-300 flex items-center justify-center text-forest-700 font-bold text-xs">
+                  <div className="w-7 h-7 rounded-lg bg-[#EAF2EC] border border-[#C5DDCB] flex items-center justify-center text-[#2D5A3F] font-bold text-xs">
                     <User className="w-3.5 h-3.5" />
                   </div>
                   <div className="hidden md:flex flex-col">
                     <span className="text-xs font-semibold text-charcoal leading-tight">{user.displayName}</span>
-                    <span className="text-[10px] text-forest-600 font-medium truncate max-w-[120px]">{userTypeLabel}</span>
+                    <span className="text-[10px] text-[#2D5A3F] font-medium truncate max-w-[120px]">{userTypeLabel}</span>
                   </div>
                 </button>
 
@@ -111,12 +120,12 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowT
                   <button
                     onClick={() => switchDemoRole(user.role === 'admin' ? 'teacher' : 'admin')}
                     title={`역할 전환 (현재: ${user.role})`}
-                    className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-oat-50 border border-border text-[11px] text-charcoal-600 flex items-center gap-1 transition-colors"
+                    className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F8F5] border border-border text-[11px] text-charcoal-600 flex items-center gap-1 transition-colors"
                   >
                     {user.role === 'admin' ? (
-                      <ShieldCheck className="w-3.5 h-3.5 text-brown-600" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
                     ) : (
-                      <UserCheck className="w-3.5 h-3.5 text-forest-600" />
+                      <UserCheck className="w-3.5 h-3.5 text-[#2D5A3F]" />
                     )}
                     <span className="hidden sm:inline">{user.role === 'admin' ? '관리자' : '일반 교사'}</span>
                   </button>
@@ -125,7 +134,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowT
                 <button
                   onClick={logout}
                   title="로그아웃"
-                  className="p-2 rounded-lg text-charcoal-500 hover:text-red-600 hover:bg-oat-50 border border-transparent hover:border-border transition-colors"
+                  className="p-2 rounded-xl text-charcoal-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -133,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onShowT
             ) : (
               <button
                 onClick={loginWithGoogle}
-                className="btn-primary px-3 py-1.5 text-xs sm:text-sm"
+                className="inline-flex items-center gap-2 bg-[#2D5A3F] hover:bg-[#234731] text-white px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Google 로그인</span>

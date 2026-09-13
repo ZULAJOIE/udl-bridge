@@ -1,76 +1,25 @@
 import React, { useState } from 'react';
 import { useWizard } from '../../context/WizardContext';
-import { useAuth } from '../../context/AuthContext';
 import {
   SPECIAL_EDUCATION_TARGETS,
   GENERAL_STUDENT_TARGETS,
   OBSERVED_DIFFICULTIES,
   OBSERVED_DIFFICULTY_CATEGORY_LABELS,
   OBSERVED_DIFFICULTY_CATEGORY_ICONS,
-  OBSERVED_DIFFICULTY_CATEGORY_ORDER,
-  recommendSupportsForDifficulties
+  OBSERVED_DIFFICULTY_CATEGORY_ORDER
 } from '../../data/udlData';
-import { SupportRecommendationResult } from '../../types';
-import { UserCheck, Sparkles, AlertCircle, CheckCircle2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserCheck, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const Step2StudentNeeds: React.FC = () => {
   const {
     state,
     togglePrimaryNeed,
-    toggleDisabilityCategory,
-    applyRecommendedSupports
+    toggleDisabilityCategory
   } = useWizard();
 
-  const { user } = useAuth();
-
   const [showSelectedSummary, setShowSelectedSummary] = useState(false);
-  const [recommendation, setRecommendation] = useState<SupportRecommendationResult | null>(null);
-  const [editedTextStrats, setEditedTextStrats] = useState<string[]>([]);
-  const [editedVisualStrats, setEditedVisualStrats] = useState<string[]>([]);
-  const [showRecNotice, setShowRecNotice] = useState(false);
 
   const selectedCount = state.primaryNeeds.length;
-
-  const handleFetchRecommendation = () => {
-    const rec = recommendSupportsForDifficulties(state.primaryNeeds);
-    setRecommendation(rec);
-    setEditedTextStrats(rec.textStrategies);
-    setEditedVisualStrats(rec.visualStrategies);
-    setShowRecNotice(false);
-  };
-
-  const toggleEditedText = (label: string) => {
-    setEditedTextStrats(prev => prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]);
-  };
-  const toggleEditedVisual = (label: string) => {
-    setEditedVisualStrats(prev => prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]);
-  };
-
-  const handleApplyAsIs = () => {
-    if (!recommendation) return;
-    applyRecommendedSupports(recommendation, { rejectedTextStrategies: [], rejectedVisualStrategies: [] }, user?.uid);
-    finishApply();
-  };
-
-  const handleApplyEdited = () => {
-    if (!recommendation) return;
-    const rejectedTextStrategies = recommendation.textStrategies.filter(s => !editedTextStrats.includes(s));
-    const rejectedVisualStrategies = recommendation.visualStrategies.filter(s => !editedVisualStrats.includes(s));
-    applyRecommendedSupports(
-      { ...recommendation, textStrategies: editedTextStrats, visualStrategies: editedVisualStrats },
-      { rejectedTextStrategies, rejectedVisualStrategies },
-      user?.uid
-    );
-    finishApply();
-  };
-
-  const finishApply = () => {
-    setRecommendation(null);
-    setShowRecNotice(true);
-    setTimeout(() => setShowRecNotice(false), 4000);
-  };
-
-  const hasAnyRecommendation = recommendation && (recommendation.textStrategies.length > 0 || recommendation.visualStrategies.length > 0);
 
   return (
     <div className="space-y-6">
@@ -226,134 +175,6 @@ export const Step2StudentNeeds: React.FC = () => {
               </div>
             );
           })}
-        </div>
-      </div>
-
-      {/* ✨ 지원 추천받기 Section — recommends, does not decide */}
-      <div className="pt-4 border-t border-border">
-        <div className="p-4 rounded-xl bg-sage-50 border border-sage-200 space-y-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <h4 className="text-sm font-bold text-charcoal flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-sage-700" />
-                어떤 지원이 적절할지 고민되시나요?
-              </h4>
-              <p className="text-xs text-charcoal-500 mt-0.5">
-                선택한 학생의 어려움을 바탕으로 적절한 교수적 지원을 추천해드려요.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleFetchRecommendation}
-              disabled={selectedCount === 0}
-              title={selectedCount === 0 ? '어려움을 1개 이상 선택해주세요' : undefined}
-              className="btn-ai w-full sm:w-auto px-4 py-2.5 text-xs sm:text-sm shrink-0"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>✨ 지원 추천받기</span>
-            </button>
-          </div>
-
-          {/* Recommendation review-and-confirm panel — nothing is applied until the teacher picks a button */}
-          {recommendation && (
-            <div className="p-3.5 rounded-lg bg-white border border-sage-300 space-y-3 animate-fadeIn">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-sage-700 shrink-0" />
-                <h5 className="text-sm font-bold text-charcoal">이런 지원을 활용해볼 수 있어요</h5>
-              </div>
-
-              <div className="flex items-start gap-2 text-[11px] text-brown-700 bg-brown-50 p-2 rounded-lg border border-brown-100">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>추천된 지원은 자동으로 확정되지 않습니다. 학생에게 적용할 지원을 직접 확인하고 선택해주세요.</span>
-              </div>
-
-              {!hasAnyRecommendation && (
-                <p className="text-xs text-charcoal-500">
-                  선택한 어려움에 딱 맞는 구체적인 지원을 찾지 못했어요. 다음 단계에서 수정 방법을 직접 선택해주세요.
-                </p>
-              )}
-
-              {recommendation.textStrategies.length > 0 && (
-                <div className="space-y-1.5">
-                  <div className="text-xs font-bold text-charcoal-500">글 자료 지원</div>
-                  <div className="flex flex-wrap gap-2">
-                    {recommendation.textStrategies.map(label => {
-                      const checked = editedTextStrats.includes(label);
-                      return (
-                        <label
-                          key={label}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer flex items-center gap-1.5 transition-colors ${
-                            checked ? 'bg-sage-50 border-forest-600 text-forest-800' : 'bg-white border-border text-charcoal-400 line-through'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleEditedText(label)}
-                            className="w-3.5 h-3.5 accent-forest-600"
-                          />
-                          <span>{label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {recommendation.visualStrategies.length > 0 && (
-                <div className="space-y-1.5">
-                  <div className="text-xs font-bold text-charcoal-500">시각자료 지원</div>
-                  <div className="flex flex-wrap gap-2">
-                    {recommendation.visualStrategies.map(label => {
-                      const checked = editedVisualStrats.includes(label);
-                      return (
-                        <label
-                          key={label}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer flex items-center gap-1.5 transition-colors ${
-                            checked ? 'bg-sage-50 border-forest-600 text-forest-800' : 'bg-white border-border text-charcoal-400 line-through'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleEditedVisual(label)}
-                            className="w-3.5 h-3.5 accent-forest-600"
-                          />
-                          <span>{label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {hasAnyRecommendation && (
-                <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
-                  <button type="button" onClick={handleApplyAsIs} className="btn-primary flex-1 text-xs sm:text-sm py-2.5">
-                    이대로 적용
-                  </button>
-                  <button type="button" onClick={handleApplyEdited} className="btn-secondary flex-1 text-xs sm:text-sm py-2.5">
-                    수정해서 적용
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {showRecNotice && (
-            <div className="p-3 rounded-lg bg-white border border-sage-300 text-sage-800 text-xs flex items-center gap-2 animate-fadeIn">
-              <CheckCircle2 className="w-4 h-4 text-sage-700 shrink-0" />
-              <span>
-                선택한 지원이 STEP 3(글/시각자료 수정 단계)에 반영되었습니다! (직접 확인 후 해제/추가 가능)
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 text-[11px] text-brown-700 bg-brown-50 p-2 rounded-lg border border-brown-100">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>이 추천은 학생의 장애유형이나 수준을 진단하지 않습니다. 교사가 관찰한 어려움을 바탕으로 한 교수설계 제안입니다.</span>
-          </div>
         </div>
       </div>
     </div>
