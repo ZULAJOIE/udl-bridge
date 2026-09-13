@@ -129,6 +129,48 @@ ${stratsText}
 - 원래 학습 개념을 왜곡하거나 변형하지 않습니다.${customRequestSection}`;
 }
 
+export function buildEnglishEducationalImagePrompt(input: VisualGenerationInput): { positivePrompt: string; negativePrompt: string } {
+  const visualStyle = input.visualStyle || 'photorealistic';
+  const topic = input.topic || '';
+  const title = input.suggestionTitle || '';
+  const desc = input.suggestionDescription || '';
+  const teacherPrompt = input.teacherCustomPrompt || '';
+
+  // Educational Concept Subject Enforcers
+  let topicEn = 'educational concept visualization';
+  const combinedText = `${topic} ${title} ${desc}`;
+
+  if (combinedText.includes('불꽃') || combinedText.includes('축제')) {
+    topicEn = 'spectacular colorful fireworks display over city skyline, night city festival landscape, economic benefit chart';
+  } else if (combinedText.includes('광합성')) {
+    topicEn = 'plant photosynthesis process diagram, green leaves, bright sunlight rays, water droplets, carbon dioxide molecule icons';
+  } else if (combinedText.includes('식물') || combinedText.includes('잎')) {
+    topicEn = 'detailed plant anatomy structure, roots, stem, green leaf texture, botany educational diagram';
+  } else if (combinedText.includes('수학') || combinedText.includes('도형') || combinedText.includes('분수')) {
+    topicEn = 'math counting blocks, geometric shapes, educational fraction pie chart';
+  } else if (combinedText.includes('경제') || combinedText.includes('자산') || combinedText.includes('소상공인')) {
+    topicEn = 'city local market shops, small business storefronts, financial growth bar chart infographic';
+  } else {
+    // General Educational Concept
+    topicEn = `${topic} - ${title}`.replace(/[^\w\s\u3131-\u318E\uAC00-\uD7A3]/gi, ' ').trim();
+  }
+
+  const styleGuidesEn: Record<VisualFormatStyle, string> = {
+    simple_drawing: 'isolated minimalist vector line art illustration on pure white background, no background clutter, textbook icon, clean black strokes',
+    photorealistic: 'crisp realistic educational photograph, professional textbook photography, clear central subject, high definition landscape or object, no random people',
+    illustration: 'vibrant clean educational cartoon illustration, child-friendly textbook style, clear outlines, bright colors',
+    diagram: 'clean 2D educational infographic flowchart diagram, structured step by step chart, clear arrows and icons'
+  };
+
+  const teacherAddon = teacherPrompt ? `, teacher note: ${teacherPrompt}` : '';
+
+  const positivePrompt = `educational image of ${topicEn}, ${desc}, ${styleGuidesEn[visualStyle]}${teacherAddon}, high resolution, textbook visual, clear educational focus, child safe`;
+
+  const negativePrompt = 'human portrait, random woman, anime girl, female model, selfie, distorted face, adult content, nsfw, inappropriate person, blurry, chaotic background, irrelevant people, messy portrait';
+
+  return { positivePrompt, negativePrompt };
+}
+
 export interface BlockRewriteInput {
   action: 'simplify' | 'shorten' | 'add_example';
   content: string;
@@ -739,6 +781,7 @@ JSON Schema format:
     const apiKey = this.getApiKey();
     const prompt = buildImageGenerationPrompt(input);
     const visualStyle = input.visualStyle || 'photorealistic';
+    const { positivePrompt, negativePrompt } = buildEnglishEducationalImagePrompt(input);
 
     // 1. Primary Attempt: Google Imagen 3 API (imagen-3.0-generate-002)
     if (apiKey) {
@@ -751,7 +794,7 @@ JSON Schema format:
             body: JSON.stringify({
               instances: [
                 {
-                  prompt: `${input.topic || ''} - ${input.suggestionTitle}. ${input.suggestionDescription}. Style: ${visualStyle}. ${input.teacherCustomPrompt || ''}`
+                  prompt: `${positivePrompt}. Negative prompt: ${negativePrompt}`
                 }
               ],
               parameters: {
@@ -791,19 +834,10 @@ JSON Schema format:
       }
     }
 
-    // 2. High-Quality Real AI Image Fallback (Pollinations AI Flux/SDXL Engine)
+    // 2. High-Quality Real AI Image Fallback (Pollinations AI Engine with Educational Filter)
     try {
       const seed = Math.floor(Math.random() * 10000);
-      const styleGuide =
-        visualStyle === 'simple_drawing'
-          ? 'minimal vector line art drawing, isolated on pure white background, clean textbook illustration'
-          : visualStyle === 'illustration'
-          ? 'vibrant colorful cartoon illustration, educational textbook style, high detail'
-          : visualStyle === 'diagram'
-          ? 'clean educational infographic diagram, step by step chart illustration'
-          : 'realistic photograph, high definition, professional textbook image';
-
-      const queryText = `${input.topic || ''} ${input.suggestionTitle}. ${input.suggestionDescription}. ${styleGuide}`;
+      const queryText = `${positivePrompt}`;
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(queryText)}?width=800&height=450&nologo=true&seed=${seed}`;
 
       return {

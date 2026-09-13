@@ -18,9 +18,10 @@ import { defaultAiProvider, getFallbackEducationalSvg } from '../../services/aiP
 import { Tooltip } from '../common/Tooltip';
 import { RichHoverCard } from '../common/RichHoverCard';
 import { AiVerificationModal } from '../common/AiVerificationModal';
+import { EducationalImageGuidelinesModal } from '../common/EducationalImageGuidelinesModal';
 import {
   FileText, Sparkles, Edit3, BookmarkPlus, Copy, RefreshCw, Check, ArrowLeft, Wand2,
-  Download, Code, Eye, Plus, Minus, X, Image as ImageIcon, Trash2, Upload, ShieldCheck
+  Download, Code, Eye, Plus, Minus, X, Image as ImageIcon, Trash2, Upload, ShieldCheck, HelpCircle
 } from 'lucide-react';
 
 interface MaterialResultViewProps {
@@ -80,6 +81,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
   // AI Visual Material Generation State
   const [generatingVisualId, setGeneratingVisualId] = useState<string | null>(null);
+  const [showImageGuidelinesModal, setShowImageGuidelinesModal] = useState(false);
 
   // AI Verification State & Handlers
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -878,9 +880,20 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                     <Sparkles className="w-3.5 h-3.5 text-forest-600" />
                     <span>AI 시각자료 화풍 스타일</span>
                   </span>
-                  <span className="text-[10px] text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded font-medium border border-forest-200">
-                    클릭 한 번으로 변환
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowImageGuidelinesModal(true)}
+                      className="text-[10px] text-[#2D5A3F] bg-[#EAF2EC] hover:bg-[#d8e8dc] px-2 py-0.5 rounded-md font-bold border border-[#C5DDCB] flex items-center gap-1 cursor-pointer transition-colors"
+                      title="교사용 AI 시각자료 교육적 생성 및 안전 지침 확인"
+                    >
+                      <ShieldCheck className="w-3 h-3 text-[#2D5A3F]" />
+                      <span>💡 생성 지침 확인</span>
+                    </button>
+                    <span className="text-[10px] text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded font-medium border border-forest-200 hidden sm:inline-block">
+                      클릭 한 번으로 변환
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-1.5 pt-1">
@@ -1242,6 +1255,12 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
           setShowVerificationModal(false);
           handleSave();
         }}
+      />
+
+      {/* Educational Image Guidelines Modal */}
+      <EducationalImageGuidelinesModal
+        isOpen={showImageGuidelinesModal}
+        onClose={() => setShowImageGuidelinesModal(false)}
       />
 
       {/* Independent Floating Reference Window (Non-blocking, Draggable, Resizable, Persistent) */}
