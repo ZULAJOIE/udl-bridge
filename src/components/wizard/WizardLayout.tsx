@@ -37,9 +37,9 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({ onMaterialGenerated,
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* 4-Step Stepper Navigation Bar */}
-      <div className="card p-3 relative">
+      <div className="card p-2.5 sm:p-3 relative">
         <BridgeMotif className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-3 text-sage-200 px-6 pointer-events-none hidden sm:block" />
-        <div className="grid grid-cols-4 gap-2 relative">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 relative">
           {steps.map(s => {
             const isActive = state.currentStep === s.num;
             const isCompleted = state.currentStep > s.num;
@@ -52,9 +52,9 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({ onMaterialGenerated,
                   if (!isDisabled) setStep(s.num);
                 }}
                 disabled={isDisabled}
-                className={`py-2.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0 ${
                   isActive
-                    ? 'bg-forest-600 text-white'
+                    ? 'bg-forest-600 text-white shadow-xs'
                     : isCompleted
                     ? 'bg-sage-100 text-forest-700 border border-sage-300'
                     : isDisabled
@@ -62,12 +62,12 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({ onMaterialGenerated,
                     : 'bg-white text-charcoal-500 border border-border hover:text-charcoal hover:bg-oat-50'
                 }`}
               >
-                <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-extrabold ${
+                <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-extrabold shrink-0 ${
                   isActive ? 'bg-white text-forest-700' : isCompleted ? 'bg-forest-600 text-white' : 'bg-oat-100 text-charcoal-400'
                 }`}>
                   {s.num}
                 </span>
-                <span className="hidden sm:inline truncate">{s.title.split('. ')[1]}</span>
+                <span className="truncate hidden sm:inline whitespace-nowrap">{s.title.split('. ')[1]}</span>
               </button>
             );
           })}
