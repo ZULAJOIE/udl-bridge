@@ -8,23 +8,14 @@ export class PdfExportService implements ExportService {
     data: GeneratedMaterial | SavedMaterial,
     targetElementId: string = 'student-document-renderer'
   ): Promise<void> {
-    const element = document.getElementById(targetElementId);
-    if (!element) {
+    const container = document.getElementById(targetElementId);
+    if (!container) {
       throw new Error(`Export target element #${targetElementId} not found`);
     }
 
     const material: GeneratedMaterial = 'generatedContent' in data ? data.generatedContent : data;
     const isLandscape = material.pageOrientation === 'landscape';
 
-    // Capture clean student worksheet container with high DPI
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false
-    });
-
-    const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
       orientation: isLandscape ? 'landscape' : 'portrait',
       unit: 'mm',
@@ -34,19 +25,27 @@ export class PdfExportService implements ExportService {
     const pdfWidth = isLandscape ? 297 : 210; // A4 width in mm
     const pdfHeight = isLandscape ? 210 : 297; // A4 height in mm
 
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
+    // Find all discrete A4 page sheets inside target container
+    const pageSheets = Array.from(container.querySelectorAll('.a4-page-sheet')) as HTMLElement[];
+    const elementsToCapture = pageSheets.length > 0 ? pageSheets : [container];
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
+    for (let i = 0; i < elementsToCapture.length; i++) {
+      const pageEl = elementsToCapture[i];
 
-    while (heightLeft > 5) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+      const canvas = await html2canvas(pageEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     }
 
     const sanitizedTitle = (material.title || '학습자료').replace(/[^a-zA-Z0-9가-힣\s_-]/g, '').trim();

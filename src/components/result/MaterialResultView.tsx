@@ -616,19 +616,16 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
               </div>
             </div>
 
-            {/* A4 Preview Container with Interactive Selection & Placeholders */}
-            <div className="bg-oat-50 p-3 sm:p-4 rounded-xl border border-border flex flex-col items-center justify-start min-h-[760px] relative overflow-hidden">
+            {/* A4 Preview Container with Interactive Selection & Multi-page Support */}
+            <div className="bg-oat-50 p-3 sm:p-4 rounded-xl border border-border flex flex-col items-center justify-start min-h-[780px] relative overflow-hidden">
               <div
-                className={`w-full flex justify-center transition-all duration-200 ${
-                  zoomLevel === 'fit' ? 'overflow-hidden max-h-[740px]' : 'overflow-auto max-h-[780px] p-2'
-                }`}
+                className="w-full flex justify-center overflow-y-auto max-h-[820px] p-2 transition-all duration-200"
               >
                 <div
-                  className="origin-top transition-transform duration-200 shadow-md"
+                  className="origin-top transition-transform duration-200"
                   style={{
                     transform: `scale(${getZoomScale()})`,
-                    width: isLandscape ? '297mm' : '210mm',
-                    minHeight: isLandscape ? '210mm' : '297mm'
+                    width: isLandscape ? '297mm' : '210mm'
                   }}
                 >
                   <StudentDocumentRenderer

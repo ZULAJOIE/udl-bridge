@@ -293,11 +293,12 @@ export class DocxExportService implements ExportService {
       }
     }
 
-    // 4. 학습 활동 및 확인 문항
+    // 4. 학습 활동 및 확인 문항 (Word 문서에서도 2페이지로 자동 분원하도록 pageBreakBefore 지원)
     if (material.activities && material.activities.length > 0) {
       children.push(
         new Paragraph({
           heading: HeadingLevel.HEADING_2,
+          pageBreakBefore: true,
           spacing: { before: 250, after: 150 },
           children: [
             new TextRun({
