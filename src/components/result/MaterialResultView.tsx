@@ -69,6 +69,9 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
   // Visual Image Size Controls: 'small' | 'medium' | 'large'
   const [imageSizes, setImageSizes] = useState<Record<string, 'small' | 'medium' | 'large'>>({});
 
+  // Teacher Custom Prompt Requests for AI Visual Generation
+  const [customVisualPrompts, setCustomVisualPrompts] = useState<Record<string, string>>({});
+
   const [saving, setSaving] = useState(false);
   const [exportingDocx, setExportingDocx] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
@@ -233,9 +236,10 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
     setImageSizes(prev => ({ ...prev, [visualId]: size }));
   };
 
-  // On-Demand AI Image Generation Handler
-  const handleGenerateVisual = async (sugg: VisualSuggestion, styleOverride?: VisualFormatStyle) => {
+  // On-Demand AI Image Generation Handler (Supports Teacher Custom Prompt Feedback)
+  const handleGenerateVisual = async (sugg: VisualSuggestion, styleOverride?: VisualFormatStyle, customPromptText?: string) => {
     const styleToUse = styleOverride || selectedStyle;
+    const promptFeedback = customPromptText !== undefined ? customPromptText : (customVisualPrompts[sugg.id] || '');
     setGeneratingVisualId(sugg.id);
     try {
       const newVisual = await defaultAiProvider.generateVisual({
@@ -247,7 +251,8 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
         reason: sugg.reason,
         visualLevel: sugg.visualLevel || state.visualModificationLevel,
         strategies: sugg.strategies && sugg.strategies.length > 0 ? sugg.strategies : state.visualStrategies,
-        visualStyle: styleToUse
+        visualStyle: styleToUse,
+        teacherCustomPrompt: promptFeedback
       });
 
       const currentVisuals = material.visuals ? [...material.visuals] : [];
@@ -270,8 +275,10 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
       setSelectedSuggestionId(sugg.id);
       onShowToast(
         'success',
-        '✓ 시각자료가 생성되었습니다.',
-        `[${VISUAL_STYLE_LABELS[styleToUse]}] Level ${newVisual.visualLevel} 시각자료가 추가되었습니다.`
+        promptFeedback ? '✓ 추가 요청 반영 재생성 완료' : '✓ 시각자료 생성 완료',
+        promptFeedback
+          ? `교사 추가 지침("${promptFeedback}")이 반영되어 시각자료가 재생성되었습니다.`
+          : `[${VISUAL_STYLE_LABELS[styleToUse]}] Level ${newVisual.visualLevel} 시각자료가 추가되었습니다.`
       );
     } catch (err) {
       onShowToast('error', '이미지 생성 실패', '시각자료 생성 중 오류가 발생했습니다.');
@@ -851,7 +858,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                               className="btn-secondary px-2.5 py-1.5 text-xs font-bold"
                               title="AI로 다시 생성"
                             >
-                              <RefreshCw className="w-3 h-3" />
+                              <RefreshCw className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
                               <span>AI 재생성</span>
                             </button>
                           </div>
@@ -864,6 +871,40 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>[삭제]</span>
                           </button>
+                        </div>
+
+                        {/* Teacher Custom Prompt Feedback Field */}
+                        <div className="pt-2.5 border-t border-border space-y-1.5">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-charcoal-600">
+                            <span className="flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-forest-600" />
+                              <span>교사 추가 요청사항 (선택)</span>
+                            </span>
+                            <span className="text-[10px] text-charcoal-400 font-normal">재생성 시 직접 반영</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={customVisualPrompts[sugg.id] || ''}
+                              onChange={(e) => setCustomVisualPrompts(prev => ({ ...prev, [sugg.id]: e.target.value }))}
+                              placeholder="예: 햇빛을 더 밝은 노란색으로 강조해주세요"
+                              className="input-field px-2.5 py-1.5 text-xs flex-1"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleGenerateVisual(sugg, selectedStyle, customVisualPrompts[sugg.id]);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleGenerateVisual(sugg, selectedStyle, customVisualPrompts[sugg.id])}
+                              disabled={isGenerating}
+                              className="btn-ai px-2.5 py-1.5 text-xs font-bold shrink-0 flex items-center gap-1"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                              <span>{isGenerating ? '생성 중...' : '요청 반영 재생성'}</span>
+                            </button>
+                          </div>
                         </div>
 
                         {/* Size Setter Controls */}
@@ -906,12 +947,32 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                         <p className="text-[11px] text-charcoal-500 leading-relaxed">{sugg.description}</p>
                       </div>
 
+                      {/* Teacher Custom Prompt Feedback Input (Initial) */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-charcoal-600 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-forest-600" />
+                          <span>교사 추가 요청사항 (선택)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={customVisualPrompts[sugg.id] || ''}
+                          onChange={(e) => setCustomVisualPrompts(prev => ({ ...prev, [sugg.id]: e.target.value }))}
+                          placeholder="예: 배경을 깔끔한 단색으로 하고 화살표 추가"
+                          className="input-field px-2.5 py-1.5 text-xs w-full"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleGenerateVisual(sugg, selectedStyle, customVisualPrompts[sugg.id]);
+                            }
+                          }}
+                        />
+                      </div>
+
                       {/* Dual Actions: [✨ AI로 생성] [↑ 내 이미지 추가] */}
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <RichHoverCard dataKey="✨ AI로 생성">
                           <button
                             type="button"
-                            onClick={() => handleGenerateVisual(sugg, selectedStyle)}
+                            onClick={() => handleGenerateVisual(sugg, selectedStyle, customVisualPrompts[sugg.id])}
                             disabled={isGenerating}
                             className="btn-ai py-2 px-3 text-xs font-extrabold w-full"
                           >

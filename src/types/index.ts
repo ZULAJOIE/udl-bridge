@@ -167,6 +167,7 @@ export interface VisualGenerationInput {
   visualLevel: ModificationLevel;
   strategies: string[];
   visualStyle?: VisualFormatStyle;
+  teacherCustomPrompt?: string;
 }
 
 export const MAX_SOURCE_PAGES = 1;

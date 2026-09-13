@@ -91,6 +91,10 @@ export function buildImageGenerationPrompt(input: VisualGenerationInput): string
     ? input.strategies.map(s => `- ${s}`).join('\n')
     : '- 기본 시각적 수정 원칙 적용';
 
+  const customRequestSection = input.teacherCustomPrompt
+    ? `\n\n6. 교사 추가 수정 지침 (Teacher Custom Request):\n- ${input.teacherCustomPrompt}`
+    : '';
+
   return `[AI 시각자료 생성 지시문 (Image AI Prompt)]
 
 1. 학습 주제 및 목적:
@@ -112,7 +116,7 @@ ${stratsText}
 5. 핵심 생성 제약조건:
 - 핵심 대상(Primary Focus Subject)을 크고 명확하게 표현합니다.
 - 장식적 요소 및 어지러운 배경을 최소화하여 특수교육 대상 학생의 시각적 과부하를 방지합니다.
-- 원래 학습 개념을 왜곡하거나 변형하지 않습니다.`;
+- 원래 학습 개념을 왜곡하거나 변형하지 않습니다.${customRequestSection}`;
 }
 
 export interface BlockRewriteInput {
