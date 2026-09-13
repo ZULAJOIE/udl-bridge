@@ -788,98 +788,59 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
                 <span>시각자료 제어 & AI 생성 화풍 선택</span>
               </label>
 
-              {/* Visual Style Selection 3 Cards (Nano-Banana / Gemini Imagen Style Selector) */}
-              <div className="space-y-2 p-3 rounded-xl bg-oat-50/80 border border-border">
-                <span className="text-[11px] font-bold text-charcoal-600 block">
-                  🎨 AI 시각자료 변환 화풍 선택
-                </span>
+              {/* Visual Style Selection 1-Line Compact Segmented Chips (Quick Click) */}
+              <div className="space-y-1.5 p-3 rounded-xl bg-oat-50/90 border border-border shadow-2xs">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-charcoal-700 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-forest-600" />
+                    <span>AI 시각자료 화풍 스타일</span>
+                  </span>
+                  <span className="text-[10px] text-forest-700 bg-forest-50 px-1.5 py-0.5 rounded font-medium border border-forest-200">
+                    클릭 한 번으로 변환
+                  </span>
+                </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  {/* Card 1: 간단한 그림 (배경 제거) */}
-                  <div
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  <button
+                    type="button"
                     onClick={() => setSelectedStyle('simple_drawing')}
-                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                    className={`py-2 px-2 rounded-lg text-xs font-extrabold transition-all border flex items-center justify-center gap-1 cursor-pointer ${
                       selectedStyle === 'simple_drawing'
-                        ? 'border-blue-500 bg-white shadow-xs'
-                        : 'border-border bg-white hover:border-charcoal-300'
+                        ? 'bg-forest-700 text-white border-forest-700 shadow-xs'
+                        : 'bg-white text-charcoal-600 border-border hover:bg-oat-50'
                     }`}
                   >
-                    <div className="w-full aspect-[4/3] rounded-lg bg-slate-50 border border-slate-200 flex flex-col items-center justify-center p-1 mb-1.5 overflow-hidden">
-                      <span className="text-2xl">🎇</span>
-                      <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 mt-1">
-                        배경 제거
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-extrabold text-charcoal leading-tight">간단한 그림</p>
-                      <p className="text-[9.5px] text-charcoal-500 leading-tight mt-1">
-                        학습지, 자료, 시각화에 사용하기 좋은 그림으로 변환해요.
-                      </p>
-                    </div>
-                    <div className="mt-2 flex justify-center">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selectedStyle === 'simple_drawing' ? 'border-blue-500 bg-blue-500' : 'border-charcoal-300'
-                      }`}>
-                        {selectedStyle === 'simple_drawing' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                    </div>
-                  </div>
+                    <span>✏️ 간단한 그림</span>
+                    <span className={`text-[9px] px-1 py-0.5 rounded font-mono ${
+                      selectedStyle === 'simple_drawing' ? 'bg-forest-800 text-white' : 'bg-forest-50 text-forest-700 border border-forest-200'
+                    }`}>
+                      배경제거
+                    </span>
+                  </button>
 
-                  {/* Card 2: 실사 이미지 */}
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setSelectedStyle('photorealistic')}
-                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                    className={`py-2 px-2 rounded-lg text-xs font-extrabold transition-all border flex items-center justify-center gap-1 cursor-pointer ${
                       selectedStyle === 'photorealistic'
-                        ? 'border-blue-500 bg-white shadow-xs'
-                        : 'border-border bg-white hover:border-charcoal-300'
+                        ? 'bg-forest-700 text-white border-forest-700 shadow-xs'
+                        : 'bg-white text-charcoal-600 border-border hover:bg-oat-50'
                     }`}
                   >
-                    <div className="w-full aspect-[4/3] rounded-lg bg-slate-900 border border-slate-700 flex flex-col items-center justify-center p-1 mb-1.5 overflow-hidden text-white">
-                      <span className="text-2xl">📸</span>
-                      <span className="text-[9px] font-bold text-slate-300 mt-1">실사 사진</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-extrabold text-charcoal leading-tight">실사 이미지</p>
-                      <p className="text-[9.5px] text-charcoal-500 leading-tight mt-1">
-                        원본과 유사한 현실적인 사진으로 변환해요.
-                      </p>
-                    </div>
-                    <div className="mt-2 flex justify-center">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selectedStyle === 'photorealistic' ? 'border-blue-500 bg-blue-500' : 'border-charcoal-300'
-                      }`}>
-                        {selectedStyle === 'photorealistic' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                    </div>
-                  </div>
+                    <span>📸 실사 이미지</span>
+                  </button>
 
-                  {/* Card 3: 일러스트(카툰) */}
-                  <div
+                  <button
+                    type="button"
                     onClick={() => setSelectedStyle('illustration')}
-                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between text-center relative ${
+                    className={`py-2 px-2 rounded-lg text-xs font-extrabold transition-all border flex items-center justify-center gap-1 cursor-pointer ${
                       selectedStyle === 'illustration'
-                        ? 'border-blue-500 bg-white shadow-xs'
-                        : 'border-border bg-white hover:border-charcoal-300'
+                        ? 'bg-forest-700 text-white border-forest-700 shadow-xs'
+                        : 'bg-white text-charcoal-600 border-border hover:bg-oat-50'
                     }`}
                   >
-                    <div className="w-full aspect-[4/3] rounded-lg bg-indigo-950 border border-indigo-800 flex flex-col items-center justify-center p-1 mb-1.5 overflow-hidden text-white">
-                      <span className="text-2xl">🎨</span>
-                      <span className="text-[9px] font-bold text-amber-300 mt-1">카툰 아트</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-extrabold text-charcoal leading-tight">일러스트(카툰)</p>
-                      <p className="text-[9.5px] text-charcoal-500 leading-tight mt-1">
-                        수업 자료, 카드뉴스 등에 활용하기 좋은 귀여운 일러스트로 변환해요.
-                      </p>
-                    </div>
-                    <div className="mt-2 flex justify-center">
-                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                        selectedStyle === 'illustration' ? 'border-blue-500 bg-blue-500' : 'border-charcoal-300'
-                      }`}>
-                        {selectedStyle === 'illustration' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                    </div>
-                  </div>
+                    <span>🎨 일러스트</span>
+                  </button>
                 </div>
               </div>
 

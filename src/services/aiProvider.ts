@@ -155,7 +155,6 @@ export interface AIProvider extends TextAIProvider, ImageAIProvider {
  * Generate educational SVG graphic dynamically for Mock mode
  */
 function createMockEducationalSvg(input: VisualGenerationInput): string {
-  const level = input.visualLevel;
   const title = input.suggestionTitle || input.topic;
   const safeTitle = title || '';
   const visualStyle = input.visualStyle || 'photorealistic';
@@ -163,128 +162,136 @@ function createMockEducationalSvg(input: VisualGenerationInput): string {
   const isFireworks = safeTitle.includes('불꽃') || safeTitle.includes('축제') || safeTitle.includes('자산') || safeTitle.includes('경제');
   const isPhotosynthesis = safeTitle.includes('광합성') || safeTitle.includes('식물') || safeTitle.includes('햇빛');
 
-  let contentSvg = '';
-
   if (isFireworks) {
-    if (level === 5) {
-      contentSvg = `
-        <rect x="180" y="70" width="240" height="140" rx="16" fill="#1e1b4b" stroke="#818cf8" stroke-width="3"/>
-        <text x="300" y="125" font-size="42" text-anchor="middle" fill="#fbbf24">🎆 → 🏬</text>
-        <text x="300" y="175" font-size="16" font-weight="bold" text-anchor="middle" fill="#ffffff">세계 불꽃 축제 도시 자산</text>
-      `;
-    } else if (level === 4) {
-      contentSvg = `
-        <rect x="40" y="90" width="150" height="90" rx="12" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
-        <text x="115" y="120" font-size="13" font-weight="bold" fill="#38bdf8" text-anchor="middle">1단계: 축제</text>
-        <text x="115" y="150" font-size="20" text-anchor="middle">🎆 불꽃 축제</text>
+    if (visualStyle === 'simple_drawing') {
+      // Clean isolated line art illustration with pure white background (No dark box frame!)
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
+          <rect width="600" height="240" fill="#ffffff" rx="16"/>
+          <!-- Fireworks burst lines -->
+          <g stroke="#1e293b" stroke-width="2.5" stroke-linecap="round">
+            <line x1="300" y1="75" x2="300" y2="25"/>
+            <line x1="300" y1="75" x2="340" y2="35"/>
+            <line x1="300" y1="75" x2="350" y2="75"/>
+            <line x1="300" y1="75" x2="340" y2="115"/>
+            <line x1="300" y1="75" x2="300" y2="125"/>
+            <line x1="300" y1="75" x2="260" y2="115"/>
+            <line x1="300" y1="75" x2="250" y2="75"/>
+            <line x1="300" y1="75" x2="260" y2="35"/>
+            
+            <circle cx="300" cy="75" r="8" fill="#2563eb"/>
+            <circle cx="345" cy="30" r="4" fill="#d97706"/>
+            <circle cx="255" cy="30" r="4" fill="#d97706"/>
+            <circle cx="355" cy="75" r="4" fill="#059669"/>
+            <circle cx="245" cy="75" r="4" fill="#059669"/>
+          </g>
 
-        <text x="215" y="142" font-size="24" fill="#94a3b8" text-anchor="middle">➔</text>
+          <!-- Store / City skyline line art -->
+          <g stroke="#334155" stroke-width="2" fill="none">
+            <rect x="70" y="140" width="80" height="65" rx="4" fill="#f8fafc"/>
+            <path d="M65 140 L110 115 L155 140 Z" fill="#e2e8f0"/>
+            <text x="110" y="178" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">🏬 동네 상권</text>
 
-        <rect x="235" y="90" width="150" height="90" rx="12" fill="#0f172a" stroke="#34d399" stroke-width="2"/>
-        <text x="310" y="120" font-size="13" font-weight="bold" fill="#34d399" text-anchor="middle">2단계: 방문</text>
-        <text x="310" y="150" font-size="20" text-anchor="middle">👥 100만 명</text>
+            <path d="M 175 172.5 L 225 172.5" stroke="#2563eb" stroke-width="3"/>
 
-        <text x="410" y="142" font-size="24" fill="#94a3b8" text-anchor="middle">➔</text>
+            <rect x="245" y="140" width="110" height="65" rx="4" fill="#f8fafc"/>
+            <text x="300" y="178" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">👥 100만 명</text>
 
-        <rect x="430" y="90" width="130" height="90" rx="12" fill="#0f172a" stroke="#f43f5e" stroke-width="2"/>
-        <text x="495" y="120" font-size="13" font-weight="bold" fill="#f43f5e" text-anchor="middle">3단계: 효과</text>
-        <text x="495" y="150" font-size="20" text-anchor="middle">💰 295억 원</text>
-      `;
-    } else if (level === 3) {
-      contentSvg = `
-        <rect x="80" y="80" width="440" height="110" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#0284c7" stroke-width="2" stroke-dasharray="6,6"/>
-        <circle cx="160" cy="135" r="35" fill="#f59e0b"/>
-        <text x="160" y="144" font-size="26" text-anchor="middle">🎆</text>
-        
-        <text x="230" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">+</text>
-        
-        <circle cx="300" cy="135" r="35" fill="#10b981"/>
-        <text x="300" y="144" font-size="26" text-anchor="middle">🏬</text>
-        
-        <text x="370" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">=</text>
+            <path d="M 375 172.5 L 425 172.5" stroke="#2563eb" stroke-width="3"/>
 
-        <circle cx="440" cy="135" r="35" fill="#6366f1"/>
-        <text x="440" y="144" font-size="26" text-anchor="middle">💰</text>
-      `;
+            <rect x="445" y="140" width="95" height="65" rx="4" fill="#f8fafc"/>
+            <text x="492.5" y="178" font-size="14" font-weight="bold" fill="#166534" text-anchor="middle">💰 295억 원</text>
+          </g>
+
+          <text x="300" y="228" font-size="12" font-weight="bold" fill="#475569" text-anchor="middle">세계 불꽃 축제 도시 자산가치 (라인아트 · 배경제거)</text>
+        </svg>
+      `.trim();
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+    } else if (visualStyle === 'illustration') {
+      // Cartoon illustration of colorful fireworks burst over glowing store
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
+          <rect width="600" height="240" fill="#0f172a" rx="16"/>
+          <circle cx="200" cy="70" r="45" fill="#f59e0b" fill-opacity="0.3"/>
+          <circle cx="200" cy="70" r="25" fill="#ef4444"/>
+          <circle cx="400" cy="60" r="40" fill="#3b82f6" fill-opacity="0.3"/>
+          <circle cx="400" cy="60" r="20" fill="#10b981"/>
+
+          <!-- City Buildings Cartoon -->
+          <rect x="50" y="130" width="80" height="90" fill="#1e293b" rx="4"/>
+          <rect x="65" y="145" width="15" height="15" fill="#fef08a"/>
+          <rect x="95" y="145" width="15" height="15" fill="#fef08a"/>
+          <rect x="65" y="175" width="15" height="15" fill="#fef08a"/>
+
+          <rect x="150" y="110" width="100" height="110" fill="#334155" rx="4"/>
+          <rect x="170" y="130" width="20" height="20" fill="#6ee7b7"/>
+          <rect x="210" y="130" width="20" height="20" fill="#6ee7b7"/>
+
+          <!-- Bridge & River -->
+          <rect x="0" y="210" width="600" height="30" fill="#0284c7"/>
+          <path d="M 0 210 Q 300 190 600 210" stroke="#f59e0b" stroke-width="4" fill="none"/>
+
+          <text x="300" y="160" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">🎆 세계 불꽃 축제 ➔ 🏬 동네 상권 295억 원지원</text>
+        </svg>
+      `.trim();
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     } else {
-      contentSvg = `
-        <rect x="60" y="85" width="480" height="100" rx="14" fill="#0f172a" stroke="#f59e0b" stroke-width="3"/>
-        <text x="140" y="130" font-size="15" font-weight="bold" fill="#fef08a" text-anchor="middle">【 🎆 불꽃 축제 】</text>
-        <text x="240" y="130" font-size="20" fill="#f59e0b" text-anchor="middle">➔</text>
-        <text x="340" y="130" font-size="15" font-weight="bold" fill="#6ee7b7" text-anchor="middle">【 🏬 동네 상권 】</text>
-        <text x="430" y="130" font-size="20" fill="#f59e0b" text-anchor="middle">➔</text>
-        <text x="485" y="130" font-size="15" font-weight="bold" fill="#c084fc" text-anchor="middle">【 💰 295억 원 】</text>
-      `;
+      // Photorealistic style photo artwork
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
+          <defs>
+            <linearGradient id="nightSky" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#020617"/>
+              <stop offset="50%" stop-color="#0f172a"/>
+              <stop offset="100%" stop-color="#1e1b4b"/>
+            </linearGradient>
+          </defs>
+          <rect width="600" height="240" fill="url(#nightSky)" rx="16"/>
+
+          <!-- Glowing fireworks photography render -->
+          <circle cx="300" cy="80" r="50" fill="#f59e0b" fill-opacity="0.2"/>
+          <circle cx="300" cy="80" r="2" fill="#ffffff"/>
+          <g stroke="#fbbf24" stroke-width="1.5">
+            <line x1="300" y1="80" x2="300" y2="25"/>
+            <line x1="300" y1="80" x2="355" y2="40"/>
+            <line x1="300" y1="80" x2="365" y2="90"/>
+            <line x1="300" y1="80" x2="340" y2="130"/>
+            <line x1="300" y1="80" x2="260" y2="130"/>
+            <line x1="300" y1="80" x2="235" y2="90"/>
+            <line x1="300" y1="80" x2="245" y2="40"/>
+          </g>
+
+          <text x="300" y="195" font-size="14" font-weight="bold" fill="#f8fafc" text-anchor="middle">📷 세계 불꽃 축제 야경 사진 (도시 실사 이미지)</text>
+        </svg>
+      `.trim();
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     }
-  } else if (isPhotosynthesis) {
-    if (level === 5) {
-      contentSvg = `
-        <rect x="180" y="70" width="240" height="140" rx="16" fill="#1e1b4b" stroke="#818cf8" stroke-width="3"/>
-        <text x="300" y="125" font-size="42" text-anchor="middle" fill="#fbbf24">☀️ → 🌿</text>
-        <text x="300" y="175" font-size="20" font-weight="bold" text-anchor="middle" fill="#ffffff">${title}</text>
-      `;
-    } else {
-      contentSvg = `
-        <rect x="80" y="80" width="440" height="110" rx="16" fill="#0284c7" fill-opacity="0.15" stroke="#0284c7" stroke-width="2" stroke-dasharray="6,6"/>
-        <circle cx="160" cy="135" r="35" fill="#f59e0b"/>
-        <text x="160" y="142" font-size="26" text-anchor="middle">☀️</text>
-        <text x="230" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">+</text>
-        <circle cx="300" cy="135" r="35" fill="#10b981"/>
-        <text x="300" y="142" font-size="26" text-anchor="middle">🌿</text>
-        <text x="370" y="142" font-size="22" fill="#38bdf8" text-anchor="middle">=</text>
-        <circle cx="440" cy="135" r="35" fill="#6366f1"/>
-        <text x="440" y="142" font-size="26" text-anchor="middle">🧪</text>
-      `;
-    }
-  } else {
-    // Universal Educational SVG for any custom topics
-    contentSvg = `
-      <rect x="60" y="85" width="480" height="100" rx="14" fill="#0f172a" stroke="#38bdf8" stroke-width="3"/>
-      <text x="140" y="130" font-size="15" font-weight="bold" fill="#38bdf8" text-anchor="middle">【 📌 핵심 개념 】</text>
-      <text x="240" y="130" font-size="20" fill="#94a3b8" text-anchor="middle">➔</text>
-      <text x="340" y="130" font-size="15" font-weight="bold" fill="#34d399" text-anchor="middle">【 💡 교수적 수정 】</text>
-      <text x="430" y="130" font-size="20" fill="#94a3b8" text-anchor="middle">➔</text>
-      <text x="485" y="130" font-size="15" font-weight="bold" fill="#fbbf24" text-anchor="middle">【 🎯 맞춤 학습 】</text>
-    `;
   }
 
+  // Universal Educational Graphic (No dark boxes)
   const isSimpleDrawing = visualStyle === 'simple_drawing';
-  const styleLabel = isSimpleDrawing
-    ? '✏️ 간단한 그림 (배경 제거)'
-    : visualStyle === 'photorealistic'
-    ? '📷 실사 이미지'
-    : visualStyle === 'illustration'
-    ? '🎨 일러스트(카툰)'
-    : '📐 단순 도식';
-
-  const cardBg = isSimpleDrawing ? '#ffffff' : 'url(#bgGrad)';
-  const cardBorder = isSimpleDrawing ? '#cbd5e1' : '#334155';
-  const headerBg = isSimpleDrawing ? '#f8fafc' : '#1e293b';
-  const textColor = isSimpleDrawing ? '#0f172a' : '#38bdf8';
-  const captionColor = isSimpleDrawing ? '#475569' : '#64748b';
+  const cardBg = isSimpleDrawing ? '#ffffff' : '#0f172a';
+  const strokeColor = isSimpleDrawing ? '#2563eb' : '#38bdf8';
+  const textColor = isSimpleDrawing ? '#0f172a' : '#f8fafc';
 
   const svgString = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
-      <defs>
-        <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#090d16" />
-          <stop offset="100%" stop-color="#111827" />
-        </linearGradient>
-      </defs>
-      
-      <!-- Outer Card Background -->
-      <rect x="0" y="0" width="600" height="240" rx="20" fill="${cardBg}" stroke="${cardBorder}" stroke-width="2" />
-      
-      <!-- Card Header -->
-      <rect x="20" y="18" width="560" height="34" rx="8" fill="${headerBg}" />
-      <text x="35" y="40" font-size="12" font-weight="bold" fill="${textColor}">🎨 AI 시각자료 [ Level ${level} ] · ${styleLabel}</text>
-      <text x="565" y="40" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="end">🧪 배경 제거 적용완료</text>
-      
-      <!-- Graphic Content -->
-      ${contentSvg}
+      <rect width="600" height="240" fill="${cardBg}" rx="16"/>
+      <g stroke="${strokeColor}" stroke-width="3" fill="none">
+        <rect x="60" y="70" width="140" height="100" rx="12"/>
+        <text x="130" y="125" font-size="15" font-weight="bold" fill="${textColor}" text-anchor="middle" stroke="none">📌 핵심 개념</text>
 
-      <!-- Bottom Caption -->
-      <text x="300" y="222" font-size="11" fill="${captionColor}" text-anchor="middle">${input.suggestionDescription || title}</text>
+        <path d="M 215 120 L 265 120" stroke="#94a3b8" stroke-width="3"/>
+
+        <rect x="280" y="70" width="140" height="100" rx="12"/>
+        <text x="350" y="125" font-size="15" font-weight="bold" fill="${textColor}" text-anchor="middle" stroke="none">💡 교수적 수정</text>
+
+        <path d="M 435 120 L 485 120" stroke="#94a3b8" stroke-width="3"/>
+
+        <rect x="500" y="70" width="70" height="100" rx="12"/>
+        <text x="535" y="125" font-size="15" font-weight="bold" fill="${textColor}" text-anchor="middle" stroke="none">🎯</text>
+      </g>
+      <text x="300" y="210" font-size="12" font-weight="bold" fill="${isSimpleDrawing ? '#64748b' : '#94a3b8'}" text-anchor="middle">${title}</text>
     </svg>
   `.trim();
 
