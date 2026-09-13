@@ -111,6 +111,8 @@ export interface MaterialFile {
   size: number;
   url?: string;
   previewUrl?: string;
+  base64Data?: string;
+  extractedText?: string;
 }
 
 export interface MaterialActivity {

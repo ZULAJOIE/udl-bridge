@@ -82,19 +82,26 @@ export const Step1MaterialUpload: React.FC = () => {
       return;
     }
 
-    const isClipboard = file.name.includes('clipboard') || file.name.includes('캡처');
-    const materialFile: MaterialFile = {
-      name: file.name || '캡처_붙여넣기_이미지.png',
-      type: isImage ? 'image' : 'pdf',
-      mimeType: file.type || 'image/png',
-      size: file.size,
-      previewUrl: isImage ? URL.createObjectURL(file) : undefined
-    };
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const base64Data = dataUrl ? dataUrl.split(',')[1] : undefined;
 
-    setMaterialFile(materialFile);
-    setPdfOverPageNotice(false);
-    setFileSizeErrorNotice(null);
-    setPendingReplaceFile(null);
+      const materialFile: MaterialFile = {
+        name: file.name || '캡처_붙여넣기_자료.png',
+        type: isImage ? 'image' : 'pdf',
+        mimeType: file.type || (isImage ? 'image/png' : 'application/pdf'),
+        size: file.size,
+        previewUrl: isImage ? URL.createObjectURL(file) : undefined,
+        base64Data
+      };
+
+      setMaterialFile(materialFile);
+      setPdfOverPageNotice(false);
+      setFileSizeErrorNotice(null);
+      setPendingReplaceFile(null);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Clipboard Paste Event Handler (Ctrl+V / Cmd+V)
@@ -364,17 +371,42 @@ export const Step1MaterialUpload: React.FC = () => {
         )}
       </div>
 
-      {/* 4. Optional Core Topic */}
+      {/* 4. Original Material Text Scanning & Extraction Area (Core Requirement) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-semibold text-charcoal-600 flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-forest-600" />
+            <span>4. 원본 수업자료 텍스트 내용 (스캔 및 분석 원문)</span>
+          </label>
+          <span className="text-[11px] text-forest-700 font-bold bg-forest-50 px-2 py-0.5 rounded border border-forest-200">
+            ✨ AI 학습지 생성 필수 반영 원문
+          </span>
+        </div>
+
+        <p className="text-xs text-charcoal-500">
+          업로드한 이미지/PDF의 텍스트가 자동으로 스캔 분석됩니다. 필요 시 직접 텍스트를 입력하거나 수정하실 수 있습니다.
+        </p>
+
+        <textarea
+          rows={4}
+          value={state.sourceText || ''}
+          onChange={(e) => setSourceText(e.target.value)}
+          placeholder="업로드한 파일이나 교과서/신문기사 원문 내용이 여기에 스캔되어 입력됩니다. 직접 복사하여 붙여넣으셔도 좋습니다."
+          className="input-field px-4 py-3 text-xs leading-relaxed font-sans"
+        />
+      </div>
+
+      {/* 5. Optional Core Topic */}
       <div className="space-y-3">
         <label className="text-sm font-semibold text-charcoal-600 flex items-center gap-1.5">
           <Edit3 className="w-4 h-4 text-brown-600" />
-          4. 핵심 학습 내용 (선택 입력)
+          5. 단원/주제 제목 (선택 입력)
         </label>
         <input
           type="text"
           value={state.topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="예: 광합성의 원리, 분수의 크기 비교, 등장인물의 마음 이해하기"
+          placeholder="예: 세계 불꽃 축제의 경제 자산 가치, 광합성의 원리"
           className="input-field px-4 py-3 text-sm"
         />
       </div>

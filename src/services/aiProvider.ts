@@ -550,6 +550,19 @@ JSON Schema format:
   "teacherNote": "교사 정답 및 지도 참고 가이드"
 }`;
 
+      const userParts: any[] = [
+        { text: `${systemInstruction}\n\n[요청 조건 지시문]\n${prompt}` }
+      ];
+
+      if (input.file && input.file.base64Data) {
+        userParts.push({
+          inlineData: {
+            mimeType: input.file.mimeType || 'image/png',
+            data: input.file.base64Data
+          }
+        });
+      }
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
         {
@@ -559,7 +572,7 @@ JSON Schema format:
             contents: [
               {
                 role: 'user',
-                parts: [{ text: `${systemInstruction}\n\n[요청 조건 지시문]\n${prompt}` }]
+                parts: userParts
               }
             ],
             generationConfig: {
