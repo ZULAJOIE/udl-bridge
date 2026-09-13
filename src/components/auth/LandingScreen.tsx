@@ -1,12 +1,15 @@
 import React from 'react';
 import brandLogo from '../../assets/udl-bridge-brand.png';
 import { ArrowRight, Sparkles, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { Footer } from '../common/Footer';
+import { LegalTab } from '../common/LegalModal';
 
 interface LandingScreenProps {
   onStart: () => void;
+  onOpenLegal: (tab: LegalTab) => void;
 }
 
-export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart }) => {
+export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart, onOpenLegal }) => {
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-charcoal flex flex-col justify-between selection:bg-[#EAF2EC] font-sans texture-paper">
       {/* Navigation Bar */}
@@ -93,13 +96,8 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onStart }) => {
         </div>
       </main>
 
-      {/* Editorial Footer */}
-      <footer className="w-full py-6 text-center text-xs text-charcoal-400 border-t border-border/60">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>udl·bridge © 2026 특수교육 학생용 교수적 수정 학습자료 생성 서비스</span>
-          <span className="text-charcoal-400">가르침과 배움을 잇는 교사용 스마트 파트너</span>
-        </div>
-      </footer>
+      {/* Shared Legal & Operational Footer */}
+      <Footer onOpenLegal={onOpenLegal} />
     </div>
   );
 };

@@ -726,52 +726,6 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
           {/* Right Column: Direct Editing Panel (7/12 cols on lg, 8/12 on xl) */}
           <div className="lg:col-span-7 xl:col-span-8 card p-5 space-y-5 shadow-sm lg:sticky lg:top-24 max-h-[880px] overflow-y-auto">
-            {/* Teacher Custom Instruction Direct API Integration Box */}
-            <div className="p-3.5 rounded-xl bg-forest-50/70 border border-forest-200 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-forest-900">
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-forest-600" />
-                  <span>교사 세부 요청사항 (API 직접 연동)</span>
-                </span>
-                <span className="text-[10px] text-forest-700 bg-white px-2 py-0.5 rounded font-mono font-semibold border border-forest-200">
-                  Gemini AI 연결
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={state.teacherRequest || ''}
-                  onChange={(e) => setTeacherRequest(e.target.value)}
-                  placeholder="예: 핵심 어휘(소상공인, 295억 원)를 강조해서 3개 단락으로 정리해주세요."
-                  className="input-field px-3 py-2 text-xs flex-1 bg-white font-sans"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && state.teacherRequest?.trim()) {
-                      handleApplyTeacherCustomRequest();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleApplyTeacherCustomRequest}
-                  disabled={regeneratingWithTeacherRequest || !state.teacherRequest?.trim()}
-                  className={`px-3 py-2 text-xs font-extrabold shrink-0 flex items-center gap-1 transition-all rounded-lg border ${
-                    !state.teacherRequest?.trim()
-                      ? 'bg-oat-100 text-charcoal-300 border-border opacity-60 cursor-not-allowed'
-                      : 'btn-ai shadow-2xs cursor-pointer'
-                  }`}
-                  title={!state.teacherRequest?.trim() ? '핵심어휘나 세부 요청사항을 입력해야 선택할 수 있습니다.' : '교사 추가 요청사항을 반영하여 AI로 학습지 전체 재구성'}
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${regeneratingWithTeacherRequest ? 'animate-spin' : ''}`} />
-                  <span>{regeneratingWithTeacherRequest ? '재구성 중...' : '요청 반영 전체 재구성'}</span>
-                </button>
-              </div>
-              {!state.teacherRequest?.trim() && (
-                <p className="text-[10px] text-amber-700 font-medium pt-0.5">
-                  ⚠️ 세부 요청사항이나 핵심어휘를 입력해야 [요청 반영 전체 재구성]을 선택할 수 있습니다.
-                </p>
-              )}
-            </div>
-
             {/* Field 1: 자료 제목 */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-charcoal-600">자료 제목</label>

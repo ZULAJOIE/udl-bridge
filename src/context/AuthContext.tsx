@@ -12,10 +12,11 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginAnonymously: () => Promise<void>;
   linkGoogleAccount: () => Promise<boolean>;
-  loginDemoUser: (role?: 'teacher' | 'admin') => void;
+  loginDemoUser: (role?: 'teacher' | 'admin', status?: 'approved' | 'pending') => void;
   logout: () => Promise<void>;
   updateUserType: (userType: UserType) => Promise<void>;
   switchDemoRole: (role: 'teacher' | 'admin') => void;
+  reloadUserProfile: () => Promise<void>;
 }
 
 const DEFAULT_DEMO_USER: UserProfile = {
@@ -26,6 +27,7 @@ const DEFAULT_DEMO_USER: UserProfile = {
   userType: 'special_class_teacher',
   authType: 'google',
   role: 'teacher',
+  status: 'approved',
   createdAt: '2026-03-01',
   lastLoginAt: new Date().toISOString()
 };
@@ -36,6 +38,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [needsUserTypeOnboarding, setNeedsUserTypeOnboarding] = useState<boolean>(false);
   const [isAuthInitializing, setIsAuthInitializing] = useState<boolean>(true);
+
+  const reloadUserProfile = async () => {
+    if (user?.uid) {
+      const refreshed = await getUserProfile(user.uid);
+      if (refreshed) {
+        setUser(refreshed);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) {
@@ -55,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: fbUser.email || storedProfile.email || '',
             displayName: fbUser.displayName || storedProfile.displayName || (isAnon ? '체험 사용자' : '교사 사용자'),
             photoURL: fbUser.photoURL || storedProfile.photoURL,
+            status: storedProfile.status || 'pending',
             lastLoginAt: new Date().toISOString()
           });
           setNeedsUserTypeOnboarding(false);
@@ -67,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             photoURL: fbUser.photoURL || undefined,
             authType: isAnon ? 'anonymous' : 'google',
             role: fbUser.email?.includes('admin') ? 'admin' : 'teacher',
+            status: fbUser.email?.includes('admin') ? 'approved' : 'pending',
             createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
             lastLoginAt: new Date().toISOString()
           };
@@ -107,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             photoURL: fbUser.photoURL || undefined,
             authType: 'google',
             role: 'teacher',
+            status: 'pending',
             createdAt: new Date().toISOString()
           });
           setNeedsUserTypeOnboarding(true);
@@ -124,7 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           displayName: '구글 연동 교사',
           email: 'google.teacher@school.ed.kr',
           authType: 'google',
-          userType: stored.userType
+          userType: stored.userType,
+          status: 'approved'
         });
         setNeedsUserTypeOnboarding(false);
       } else {
@@ -134,6 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: 'google.teacher@school.ed.kr',
           authType: 'google',
           role: 'teacher',
+          status: 'pending',
           createdAt: new Date().toISOString()
         });
         setNeedsUserTypeOnboarding(true);
@@ -162,6 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: '체험 사용자',
             authType: 'anonymous',
             role: 'teacher',
+            status: 'approved',
             createdAt: new Date().toISOString()
           });
           setNeedsUserTypeOnboarding(true);
@@ -178,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: '',
         authType: 'anonymous',
         role: 'teacher',
+        status: 'approved',
         createdAt: new Date().toISOString()
       });
       setNeedsUserTypeOnboarding(true);
@@ -203,7 +221,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           'google',
           updatedUser.email,
           updatedUser.displayName,
-          updatedUser.role
+          updatedUser.role,
+          updatedUser.status || 'pending'
         );
         setUser(updatedUser);
         return true;
@@ -227,7 +246,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           'google',
           updatedUser.email,
           updatedUser.displayName,
-          updatedUser.role
+          updatedUser.role,
+          updatedUser.status || 'pending'
         );
         setUser(updatedUser);
         return true;
@@ -236,25 +256,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loginDemoUser = (role: 'teacher' | 'admin' = 'teacher') => {
+  const loginDemoUser = (role: 'teacher' | 'admin' = 'teacher', status: 'approved' | 'pending' = 'approved') => {
     setUser({
       ...DEFAULT_DEMO_USER,
       role,
+      status: role === 'admin' ? 'approved' : status,
       userType: 'special_class_teacher',
-      displayName: role === 'admin' ? '김관리 수석교사' : '김특수 교사'
+      displayName: role === 'admin' ? '김관리 수석교사' : (status === 'pending' ? '박승인대기 교사' : '김특수 교사')
     });
     setNeedsUserTypeOnboarding(false);
   };
 
   const updateUserType = async (userType: UserType) => {
     if (!user) return;
+    const initialStatus = user.role === 'admin' ? 'approved' : (user.status || 'pending');
     const updated = await saveUserProfile(
       user.uid,
       userType,
       user.authType || 'google',
       user.email,
       user.displayName,
-      user.role
+      user.role,
+      initialStatus
     );
     setUser(updated);
     setNeedsUserTypeOnboarding(false);
@@ -273,12 +296,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser({
         ...user,
         role,
+        status: role === 'admin' ? 'approved' : (user.status || 'approved'),
         displayName: role === 'admin' ? '김관리 수석교사' : '김특수 교사'
       });
     } else {
       setUser({
         ...DEFAULT_DEMO_USER,
         role,
+        status: role === 'admin' ? 'approved' : 'approved',
         displayName: role === 'admin' ? '김관리 수석교사' : '김특수 교사'
       });
     }
@@ -297,7 +322,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginDemoUser,
         logout,
         updateUserType,
-        switchDemoRole
+        switchDemoRole,
+        reloadUserProfile
       }}
     >
       {children}

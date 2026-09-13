@@ -10,13 +10,19 @@ import { LandingScreen } from './components/auth/LandingScreen';
 import { AuthSelectionModal } from './components/auth/AuthSelectionModal';
 import { UserTypeOnboardingModal } from './components/auth/UserTypeOnboardingModal';
 import { ToastContainer, ToastMessage } from './components/common/Toast';
+import { Footer } from './components/common/Footer';
+import { LegalModal, LegalTab } from './components/common/LegalModal';
+
+import { PendingApprovalScreen } from './components/auth/PendingApprovalScreen';
 
 const MainContent: React.FC = () => {
-  const { user, needsUserTypeOnboarding, isAuthInitializing, updateUserType, loginDemoUser } = useAuth();
+  const { user, needsUserTypeOnboarding, isAuthInitializing, updateUserType } = useAuth();
   const [activeTab, setActiveTab] = useState<'wizard' | 'mymaterials' | 'admin'>('wizard');
   const [viewMode, setViewMode] = useState<'wizard' | 'result'>('wizard');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalModalTab, setLegalModalTab] = useState<LegalTab>('terms');
 
   const showToast = (type: 'success' | 'error' | 'info', title: string, description?: string) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
@@ -35,6 +41,11 @@ const MainContent: React.FC = () => {
     if (tab === 'wizard') {
       setViewMode('wizard');
     }
+  };
+
+  const handleOpenLegal = (tab: LegalTab) => {
+    setLegalModalTab(tab);
+    setIsLegalModalOpen(true);
   };
 
   // 1. Loading State during Auth Initialization
@@ -57,15 +68,26 @@ const MainContent: React.FC = () => {
       <div className="min-h-screen bg-[#F8F6F0] text-charcoal flex flex-col justify-between font-sans">
         <LandingScreen
           onStart={() => setIsAuthModalOpen(true)}
+          onOpenLegal={handleOpenLegal}
         />
         <AuthSelectionModal
           isOpen={isAuthModalOpen}
           onClose={() => setIsAuthModalOpen(false)}
           onShowToast={showToast}
         />
+        <LegalModal
+          isOpen={isLegalModalOpen}
+          initialTab={legalModalTab}
+          onClose={() => setIsLegalModalOpen(false)}
+        />
         <ToastContainer toasts={toasts} onDismiss={dismissToast} />
       </div>
     );
+  }
+
+  // 2.5 Pending Admin Approval Screen for teachers awaiting approval
+  if (user.role !== 'admin' && user.status === 'pending') {
+    return <PendingApprovalScreen />;
   }
 
   // 3. Main Web Application with Step 1~4, My Materials, Admin Dashboard
@@ -116,13 +138,14 @@ const MainContent: React.FC = () => {
         />
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-background py-6 text-center text-xs text-charcoal-400">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>udl·bridge © 2026 특수교육 학생용 교수적 수정 학습자료 생성 서비스</span>
-          <span className="text-charcoal-400">장애유형보다 교육적 요구 중심 • AI 추천 교사 최종 결정을 준수합니다.</span>
-        </div>
-      </footer>
+      {/* Shared Footer & Legal Modal */}
+      <Footer onOpenLegal={handleOpenLegal} />
+
+      <LegalModal
+        isOpen={isLegalModalOpen}
+        initialTab={legalModalTab}
+        onClose={() => setIsLegalModalOpen(false)}
+      />
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>

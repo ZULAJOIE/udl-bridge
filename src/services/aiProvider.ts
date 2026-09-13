@@ -158,7 +158,7 @@ export interface AIProvider extends TextAIProvider, ImageAIProvider {
  * Generate educational SVG graphic dynamically for Mock mode
  */
 function createMockEducationalSvg(input: VisualGenerationInput): string {
-  const title = input.suggestionTitle || input.topic;
+  const title = input.suggestionTitle || input.topic || '학습 시각자료';
   const safeTitle = title || '';
   const visualStyle = input.visualStyle || 'photorealistic';
 
@@ -167,134 +167,150 @@ function createMockEducationalSvg(input: VisualGenerationInput): string {
 
   if (isFireworks) {
     if (visualStyle === 'simple_drawing') {
-      // Clean isolated line art illustration with pure white background (No dark box frame!)
+      // Clean line art illustration with pure white background
       const svgString = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
           <rect width="600" height="240" fill="#ffffff" rx="16"/>
-          <!-- Fireworks burst lines -->
-          <g stroke="#1e293b" stroke-width="2.5" stroke-linecap="round">
-            <line x1="300" y1="75" x2="300" y2="25"/>
-            <line x1="300" y1="75" x2="340" y2="35"/>
-            <line x1="300" y1="75" x2="350" y2="75"/>
-            <line x1="300" y1="75" x2="340" y2="115"/>
-            <line x1="300" y1="75" x2="300" y2="125"/>
-            <line x1="300" y1="75" x2="260" y2="115"/>
-            <line x1="300" y1="75" x2="250" y2="75"/>
-            <line x1="300" y1="75" x2="260" y2="35"/>
-            
-            <circle cx="300" cy="75" r="8" fill="#2563eb"/>
-            <circle cx="345" cy="30" r="4" fill="#d97706"/>
-            <circle cx="255" cy="30" r="4" fill="#d97706"/>
-            <circle cx="355" cy="75" r="4" fill="#059669"/>
-            <circle cx="245" cy="75" r="4" fill="#059669"/>
+          
+          <!-- Fireworks burst header icon -->
+          <g stroke="#2D5A3F" stroke-width="2" stroke-linecap="round" fill="none">
+            <line x1="300" y1="50" x2="300" y2="20"/>
+            <line x1="300" y1="50" x2="330" y2="25"/>
+            <line x1="300" y1="50" x2="340" y2="50"/>
+            <line x1="300" y1="50" x2="330" y2="75"/>
+            <line x1="300" y1="50" x2="270" y2="75"/>
+            <line x1="300" y1="50" x2="260" y2="50"/>
+            <line x1="300" y1="50" x2="270" y2="25"/>
+            <circle cx="300" cy="50" r="5" fill="#2D5A3F"/>
+          </g>
+          <text x="300" y="90" font-size="15" font-weight="bold" fill="#1A3323" text-anchor="middle">🎆 세계 불꽃 축제와 지역 경제 효과</text>
+
+          <!-- 3-Step Flowchart Cards -->
+          <g transform="translate(40, 110)">
+            <!-- Card 1 -->
+            <rect x="0" y="0" width="150" height="75" rx="12" fill="#EAF2EC" stroke="#C5DDCB" stroke-width="1.5"/>
+            <text x="75" y="32" font-size="13" font-weight="bold" fill="#2D5A3F" text-anchor="middle">1. 세계 불꽃 축제</text>
+            <text x="75" y="54" font-size="11" fill="#475569" text-anchor="middle">밤하늘 불꽃놀이 행사</text>
+
+            <!-- Arrow 1 -->
+            <path d="M 160 37 L 180 37" stroke="#2D5A3F" stroke-width="2.5" marker-end="url(#arrow)"/>
+            <polygon points="182,37 175,32 175,42" fill="#2D5A3F"/>
+
+            <!-- Card 2 -->
+            <rect x="185" y="0" width="150" height="75" rx="12" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1.5"/>
+            <text x="260" y="32" font-size="13" font-weight="bold" fill="#92400E" text-anchor="middle">2. 100만 명 방문</text>
+            <text x="260" y="54" font-size="11" fill="#78350F" text-anchor="middle">외국인/국내 관광객</text>
+
+            <!-- Arrow 2 -->
+            <polygon points="347,37 340,32 340,42" fill="#2D5A3F"/>
+            <path d="M 325 37 L 345 37" stroke="#2D5A3F" stroke-width="2.5"/>
+
+            <!-- Card 3 -->
+            <rect x="350" y="0" width="170" height="75" rx="12" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="1.5"/>
+            <text x="435" y="32" font-size="13" font-weight="bold" fill="#065F46" text-anchor="middle">3. 295억 원 경제 효과</text>
+            <text x="435" y="54" font-size="11" fill="#047857" text-anchor="middle">동네 식당/상권 지원</text>
           </g>
 
-          <!-- Store / City skyline line art -->
-          <g stroke="#334155" stroke-width="2" fill="none">
-            <rect x="70" y="140" width="80" height="65" rx="4" fill="#f8fafc"/>
-            <path d="M65 140 L110 115 L155 140 Z" fill="#e2e8f0"/>
-            <text x="110" y="178" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">🏬 동네 상권</text>
-
-            <path d="M 175 172.5 L 225 172.5" stroke="#2563eb" stroke-width="3"/>
-
-            <rect x="245" y="140" width="110" height="65" rx="4" fill="#f8fafc"/>
-            <text x="300" y="178" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">👥 100만 명</text>
-
-            <path d="M 375 172.5 L 425 172.5" stroke="#2563eb" stroke-width="3"/>
-
-            <rect x="445" y="140" width="95" height="65" rx="4" fill="#f8fafc"/>
-            <text x="492.5" y="178" font-size="14" font-weight="bold" fill="#166534" text-anchor="middle">💰 295억 원</text>
-          </g>
-
-          <text x="300" y="228" font-size="12" font-weight="bold" fill="#475569" text-anchor="middle">세계 불꽃 축제 도시 자산가치 (라인아트 · 배경제거)</text>
-        </svg>
-      `.trim();
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
-    } else if (visualStyle === 'illustration') {
-      // Cartoon illustration of colorful fireworks burst over glowing store
-      const svgString = `
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
-          <rect width="600" height="240" fill="#0f172a" rx="16"/>
-          <circle cx="200" cy="70" r="45" fill="#f59e0b" fill-opacity="0.3"/>
-          <circle cx="200" cy="70" r="25" fill="#ef4444"/>
-          <circle cx="400" cy="60" r="40" fill="#3b82f6" fill-opacity="0.3"/>
-          <circle cx="400" cy="60" r="20" fill="#10b981"/>
-
-          <!-- City Buildings Cartoon -->
-          <rect x="50" y="130" width="80" height="90" fill="#1e293b" rx="4"/>
-          <rect x="65" y="145" width="15" height="15" fill="#fef08a"/>
-          <rect x="95" y="145" width="15" height="15" fill="#fef08a"/>
-          <rect x="65" y="175" width="15" height="15" fill="#fef08a"/>
-
-          <rect x="150" y="110" width="100" height="110" fill="#334155" rx="4"/>
-          <rect x="170" y="130" width="20" height="20" fill="#6ee7b7"/>
-          <rect x="210" y="130" width="20" height="20" fill="#6ee7b7"/>
-
-          <!-- Bridge & River -->
-          <rect x="0" y="210" width="600" height="30" fill="#0284c7"/>
-          <path d="M 0 210 Q 300 190 600 210" stroke="#f59e0b" stroke-width="4" fill="none"/>
-
-          <text x="300" y="160" font-size="15" font-weight="bold" fill="#ffffff" text-anchor="middle">🎆 세계 불꽃 축제 ➔ 🏬 동네 상권 295억 원지원</text>
+          <text x="300" y="222" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle">수업용 시각자료 구조도 (초등·중등 교과용)</text>
         </svg>
       `.trim();
       return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     } else {
-      // Photorealistic style photo artwork
+      // Light pastel illustration SVG
       const svgString = `
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
-          <defs>
-            <linearGradient id="nightSky" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#020617"/>
-              <stop offset="50%" stop-color="#0f172a"/>
-              <stop offset="100%" stop-color="#1e1b4b"/>
-            </linearGradient>
-          </defs>
-          <rect width="600" height="240" fill="url(#nightSky)" rx="16"/>
+          <rect width="600" height="240" fill="#F8F6F0" rx="16"/>
+          
+          <!-- Decorative Top Banner -->
+          <rect x="30" y="20" width="540" height="45" rx="10" fill="#2D5A3F"/>
+          <text x="300" y="48" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">🎆 세계 불꽃 축제의 경제적 가치와 동네 상권 지원</text>
 
-          <!-- Glowing fireworks photography render -->
-          <circle cx="300" cy="80" r="50" fill="#f59e0b" fill-opacity="0.2"/>
-          <circle cx="300" cy="80" r="2" fill="#ffffff"/>
-          <g stroke="#fbbf24" stroke-width="1.5">
-            <line x1="300" y1="80" x2="300" y2="25"/>
-            <line x1="300" y1="80" x2="355" y2="40"/>
-            <line x1="300" y1="80" x2="365" y2="90"/>
-            <line x1="300" y1="80" x2="340" y2="130"/>
-            <line x1="300" y1="80" x2="260" y2="130"/>
-            <line x1="300" y1="80" x2="235" y2="90"/>
-            <line x1="300" y1="80" x2="245" y2="40"/>
+          <!-- 3 Flow Cards -->
+          <g transform="translate(40, 85)">
+            <rect x="0" y="0" width="150" height="95" rx="12" fill="#ffffff" stroke="#CBD5E1" stroke-width="1.5"/>
+            <text x="75" y="35" font-size="24" text-anchor="middle">🎆</text>
+            <text x="75" y="60" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">세계 불꽃 축제</text>
+            <text x="75" y="78" font-size="10" fill="#64748B" text-anchor="middle">화려한 문화 행사</text>
+
+            <text x="167" y="52" font-size="16" font-weight="bold" fill="#2D5A3F" text-anchor="middle">➔</text>
+
+            <rect x="185" y="0" width="150" height="95" rx="12" fill="#ffffff" stroke="#CBD5E1" stroke-width="1.5"/>
+            <text x="260" y="35" font-size="24" text-anchor="middle">👥</text>
+            <text x="260" y="60" font-size="12" font-weight="bold" fill="#0F172A" text-anchor="middle">100만 명 방문</text>
+            <text x="260" y="78" font-size="10" fill="#64748B" text-anchor="middle">관광객 수 늘어남</text>
+
+            <text x="352" y="52" font-size="16" font-weight="bold" fill="#2D5A3F" text-anchor="middle">➔</text>
+
+            <rect x="370" y="0" width="150" height="95" rx="12" fill="#EAF2EC" stroke="#C5DDCB" stroke-width="1.5"/>
+            <text x="445" y="35" font-size="24" text-anchor="middle">🏬</text>
+            <text x="445" y="60" font-size="12" font-weight="bold" fill="#1A3323" text-anchor="middle">295억 원 효과</text>
+            <text x="445" y="78" font-size="10" fill="#2D5A3F" text-anchor="middle">소상공인 매출 증대</text>
           </g>
 
-          <text x="300" y="195" font-size="14" font-weight="bold" fill="#f8fafc" text-anchor="middle">📷 세계 불꽃 축제 야경 사진 (도시 실사 이미지)</text>
+          <text x="300" y="218" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle">UDL 시각적 구조화 자료</text>
         </svg>
       `.trim();
       return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
     }
   }
 
-  // Universal Educational Graphic (No dark boxes)
-  const isSimpleDrawing = visualStyle === 'simple_drawing';
-  const cardBg = isSimpleDrawing ? '#ffffff' : '#0f172a';
-  const strokeColor = isSimpleDrawing ? '#2563eb' : '#38bdf8';
-  const textColor = isSimpleDrawing ? '#0f172a' : '#f8fafc';
+  if (isPhotosynthesis) {
+    const svgString = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
+        <rect width="600" height="240" fill="#F8F6F0" rx="16"/>
+        
+        <text x="300" y="40" font-size="16" font-weight="bold" fill="#1A3323" text-anchor="middle">🌿 식물의 광합성 반응 3요소</text>
 
+        <g transform="translate(50, 65)">
+          <rect x="0" y="0" width="140" height="110" rx="14" fill="#FEF3C7" stroke="#FDE68A" stroke-width="1.5"/>
+          <text x="70" y="40" font-size="28" text-anchor="middle">☀️</text>
+          <text x="70" y="70" font-size="13" font-weight="bold" fill="#92400E" text-anchor="middle">1. 햇빛</text>
+          <text x="70" y="90" font-size="11" fill="#78350F" text-anchor="middle">빛 에너지 공급</text>
+
+          <text x="160" y="60" font-size="20" font-weight="bold" fill="#2D5A3F" text-anchor="middle">+</text>
+
+          <rect x="180" y="0" width="140" height="110" rx="14" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="1.5"/>
+          <text x="250" y="40" font-size="28" text-anchor="middle">💧</text>
+          <text x="250" y="70" font-size="13" font-weight="bold" fill="#075985" text-anchor="middle">2. 물</text>
+          <text x="250" y="90" font-size="11" fill="#0369A1" text-anchor="middle">뿌리에서 흡수</text>
+
+          <text x="340" y="60" font-size="20" font-weight="bold" fill="#2D5A3F" text-anchor="middle">+</text>
+
+          <rect x="360" y="0" width="140" height="110" rx="14" fill="#EAF2EC" stroke="#C5DDCB" stroke-width="1.5"/>
+          <text x="430" y="40" font-size="28" text-anchor="middle">💨</text>
+          <text x="430" y="70" font-size="13" font-weight="bold" fill="#1A3323" text-anchor="middle">3. 이산화탄소</text>
+          <text x="430" y="90" font-size="11" fill="#2D5A3F" text-anchor="middle">잎의 기공 흡수</text>
+        </g>
+
+        <text x="300" y="215" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle">식물이 스스로 양분(포도당)과 산소를 만들어내요</text>
+      </svg>
+    `.trim();
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+  }
+
+  // Universal Light Educational Flowchart
   const svgString = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240" width="100%" height="100%">
-      <rect width="600" height="240" fill="${cardBg}" rx="16"/>
-      <g stroke="${strokeColor}" stroke-width="3" fill="none">
-        <rect x="60" y="70" width="140" height="100" rx="12"/>
-        <text x="130" y="125" font-size="15" font-weight="bold" fill="${textColor}" text-anchor="middle" stroke="none">📌 핵심 개념</text>
+      <rect width="600" height="240" fill="#F8F6F0" rx="16"/>
+      <g stroke="#2D5A3F" stroke-width="2" fill="none">
+        <rect x="50" y="60" width="150" height="100" rx="12" fill="#ffffff"/>
+        <text x="125" y="105" font-size="14" font-weight="bold" fill="#1A3323" text-anchor="middle" stroke="none">📌 핵심 개념</text>
+        <text x="125" y="128" font-size="11" fill="#64748B" text-anchor="middle" stroke="none">${title}</text>
 
-        <path d="M 215 120 L 265 120" stroke="#94a3b8" stroke-width="3"/>
+        <path d="M 215 110 L 260 110" stroke="#2D5A3F" stroke-width="2.5"/>
+        <polygon points="262,110 255,105 255,115" fill="#2D5A3F" stroke="none"/>
 
-        <rect x="280" y="70" width="140" height="100" rx="12"/>
-        <text x="350" y="125" font-size="15" font-weight="bold" fill="${textColor}" text-anchor="middle" stroke="none">💡 교수적 수정</text>
+        <rect x="270" y="60" width="150" height="100" rx="12" fill="#EAF2EC"/>
+        <text x="345" y="105" font-size="14" font-weight="bold" fill="#2D5A3F" text-anchor="middle" stroke="none">💡 UDL 시각 지원</text>
+        <text x="345" y="128" font-size="11" fill="#1A3323" text-anchor="middle" stroke="none">단계별 구조화</text>
 
-        <path d="M 435 120 L 485 120" stroke="#94a3b8" stroke-width="3"/>
+        <path d="M 435 110 L 480 110" stroke="#2D5A3F" stroke-width="2.5"/>
+        <polygon points="482,110 475,105 475,115" fill="#2D5A3F" stroke="none"/>
 
-        <rect x="500" y="70" width="70" height="100" rx="12"/>
-        <text x="535" y="125" font-size="15" font-weight="bold" fill="${textColor}" text-anchor="middle" stroke="none">🎯</text>
+        <rect x="490" y="60" width="70" height="100" rx="12" fill="#ffffff"/>
+        <text x="525" y="115" font-size="24" text-anchor="middle" stroke="none">🎯</text>
       </g>
-      <text x="300" y="210" font-size="12" font-weight="bold" fill="${isSimpleDrawing ? '#64748b' : '#94a3b8'}" text-anchor="middle">${title}</text>
+      <text x="300" y="205" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle">특수교육 교수적 수정 맞춤형 학습 시각자료</text>
     </svg>
   `.trim();
 
@@ -708,89 +724,77 @@ JSON Schema format:
 
   async generateVisual(input: VisualGenerationInput): Promise<GeneratedVisual> {
     const apiKey = this.getApiKey();
-    if (!apiKey) return this.mock.generateVisual(input);
-
     const prompt = buildImageGenerationPrompt(input);
+    const visualStyle = input.visualStyle || 'photorealistic';
 
     // 1. Primary Attempt: Google Imagen 3 API (imagen-3.0-generate-002)
-    try {
-      const imagenResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instances: [
-              {
-                prompt: `${input.topic} - ${input.suggestionTitle}. ${input.suggestionDescription}. Style: ${input.visualStyle}. ${input.teacherCustomPrompt || ''}`
+    if (apiKey) {
+      try {
+        const imagenResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              instances: [
+                {
+                  prompt: `${input.topic || ''} - ${input.suggestionTitle}. ${input.suggestionDescription}. Style: ${visualStyle}. ${input.teacherCustomPrompt || ''}`
+                }
+              ],
+              parameters: {
+                sampleCount: 1,
+                aspectRatio: '16:9'
               }
-            ],
-            parameters: {
-              sampleCount: 1,
-              aspectRatio: '16:9'
-            }
-          })
-        }
-      );
+            })
+          }
+        );
 
-      if (imagenResponse.ok) {
-        const imagenData = await imagenResponse.json();
-        const b64 = imagenData.predictions?.[0]?.bytesBase64Encoded;
-        const mime = imagenData.predictions?.[0]?.mimeType || 'image/png';
+        if (imagenResponse.ok) {
+          const imagenData = await imagenResponse.json();
+          const b64 = imagenData.predictions?.[0]?.bytesBase64Encoded;
+          const mime = imagenData.predictions?.[0]?.mimeType || 'image/png';
 
-        if (b64) {
-          const imageUrl = `data:${mime};base64,${b64}`;
-          return {
-            id: `vis-imagen-${Date.now()}`,
-            suggestionId: input.suggestionId,
-            sectionId: input.sectionId,
-            imageUrl,
-            description: input.suggestionDescription,
-            reason: input.reason,
-            generationPrompt: prompt,
-            visualLevel: input.visualLevel,
-            strategies: input.strategies,
-            visualStyle: input.visualStyle || 'photorealistic',
-            isMock: false,
-            source: 'ai',
-            createdAt: new Date().toISOString()
-          };
+          if (b64) {
+            const imageUrl = `data:${mime};base64,${b64}`;
+            return {
+              id: `vis-imagen-${Date.now()}`,
+              suggestionId: input.suggestionId,
+              sectionId: input.sectionId,
+              imageUrl,
+              description: input.suggestionDescription,
+              reason: input.reason,
+              generationPrompt: prompt,
+              visualLevel: input.visualLevel,
+              strategies: input.strategies,
+              visualStyle,
+              isMock: false,
+              source: 'ai',
+              createdAt: new Date().toISOString()
+            };
+          }
         }
+      } catch (imagenErr) {
+        console.warn('Imagen 3 API request failed. Trying Pollinations AI fallback:', imagenErr);
       }
-    } catch (imagenErr) {
-      console.warn('Imagen 3 API request failed. Trying Gemini SVG fallback:', imagenErr);
     }
 
-    // 2. Secondary Fallback: Gemini Flash SVG Generation
+    // 2. High-Quality Real AI Image Fallback (Pollinations AI Flux/SDXL Engine)
     try {
-      const svgPrompt = `${prompt}\n\n[출력 제약]\n위 내용을 바탕으로 viewBox="0 0 600 240" 규격의 독립적인 SVG XML 코드만 출력하세요.\nHTML 태그, 마크다운 주석, 설명문 없이 오직 <svg>...</svg> 태그만 출력해야 합니다.`;
+      const seed = Math.floor(Math.random() * 10000);
+      const styleGuide =
+        visualStyle === 'simple_drawing'
+          ? 'minimal vector line art drawing, isolated on pure white background, clean textbook illustration'
+          : visualStyle === 'illustration'
+          ? 'vibrant colorful cartoon illustration, educational textbook style, high detail'
+          : visualStyle === 'diagram'
+          ? 'clean educational infographic diagram, step by step chart illustration'
+          : 'realistic photograph, high definition, professional textbook image';
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: svgPrompt }] }],
-            generationConfig: { temperature: 0.4 }
-          })
-        }
-      );
-
-      if (!response.ok) throw new Error(`Gemini generateVisual error: ${response.status}`);
-      const resData = await response.json();
-      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      const svgMatch = rawText.match(/<svg[\s\S]*<\/svg>/i);
-      let imageUrl = '';
-      if (svgMatch) {
-        imageUrl = svgMatch[0];
-      } else {
-        imageUrl = createMockEducationalSvg(input);
-      }
+      const queryText = `${input.topic || ''} ${input.suggestionTitle}. ${input.suggestionDescription}. ${styleGuide}`;
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(queryText)}?width=800&height=450&nologo=true&seed=${seed}`;
 
       return {
-        id: `vis-gemini-${Date.now()}`,
+        id: `vis-ai-${Date.now()}`,
         suggestionId: input.suggestionId,
         sectionId: input.sectionId,
         imageUrl,
@@ -799,13 +803,13 @@ JSON Schema format:
         generationPrompt: prompt,
         visualLevel: input.visualLevel,
         strategies: input.strategies,
-        visualStyle: input.visualStyle || 'photorealistic',
+        visualStyle,
         isMock: false,
         source: 'ai',
         createdAt: new Date().toISOString()
       };
     } catch (e) {
-      console.warn('Gemini generateVisual failed. Falling back to Mock:', e);
+      console.warn('Pollinations AI image generation failed. Using clean light SVG:', e);
       return this.mock.generateVisual(input);
     }
   }

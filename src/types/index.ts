@@ -19,6 +19,8 @@ export const USER_TYPES: Record<UserType, string> = {
   other: '기타',
 };
 
+export type AccountStatus = 'pending' | 'approved' | 'rejected';
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -27,6 +29,7 @@ export interface UserProfile {
   userType?: UserType;
   authType?: 'google' | 'anonymous';
   role: 'teacher' | 'admin';
+  status?: AccountStatus;
   createdAt: string;
   lastLoginAt?: string;
   updatedAt?: string;
