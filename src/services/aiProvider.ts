@@ -622,7 +622,7 @@ JSON Schema format:
       }
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -690,7 +690,7 @@ JSON Schema format:
         pageSize: input.pageSize || 'A4',
         pageOrientation: input.pageOrientation || 'portrait',
         pageLength: input.pageLength || 'auto',
-        summaryNote: parsed.summaryNote || `Google Gemini 1.5 UDL 교수적 수정 | ${levelText}`,
+        summaryNote: parsed.summaryNote || `Google Gemini 2.0 UDL 교수적 수정 | ${levelText}`,
         teacherNote: parsed.teacherNote || '교사용 정답 및 지도 가이드',
         generatedPrompt: prompt,
         createdAt: new Date().toLocaleString('ko-KR', { hour12: false })
@@ -719,7 +719,7 @@ JSON Schema format:
 HTML 태그, 마크다운 주석, 설명문 없이 오직 <svg>...</svg> 태그만 출력해야 합니다.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -783,7 +783,7 @@ ${input.content}
 오직 새로 작성된 학습지 단락 내용만 출력해주세요. 메타 설명이나 인사말은 금지합니다.`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -837,7 +837,7 @@ ${input.originalText || '원문 정보 없음 (주제 내용 기반)'}
 }`;
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
