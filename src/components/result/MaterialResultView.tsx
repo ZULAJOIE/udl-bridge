@@ -7,7 +7,8 @@ import {
   VisualSuggestion,
   GeneratedVisual,
   VisualFormatStyle,
-  VISUAL_STYLE_LABELS
+  VISUAL_STYLE_LABELS,
+  WorksheetVerificationResult
 } from '../../types';
 import { saveMaterial, logUsageEvent } from '../../services/dataService';
 import { DocxExportService, PdfExportService } from '../../services/export';
@@ -16,9 +17,10 @@ import { FloatingReferenceWindow } from './FloatingReferenceWindow';
 import { defaultAiProvider } from '../../services/aiProvider';
 import { Tooltip } from '../common/Tooltip';
 import { RichHoverCard } from '../common/RichHoverCard';
+import { AiVerificationModal } from '../common/AiVerificationModal';
 import {
   FileText, Sparkles, Edit3, BookmarkPlus, Copy, RefreshCw, Check, ArrowLeft, Wand2,
-  Download, Code, Eye, Plus, Minus, X, Image as ImageIcon, Trash2, Upload
+  Download, Code, Eye, Plus, Minus, X, Image as ImageIcon, Trash2, Upload, ShieldCheck
 } from 'lucide-react';
 
 interface MaterialResultViewProps {
@@ -32,7 +34,7 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
   onBackToWizard,
   onNavigateToMyMaterials
 }) => {
-  const { state, updateGeneratedContent } = useWizard();
+  const { state, updateGeneratedContent, setTeacherRequest } = useWizard();
   const { user } = useAuth();
 
   const material = state.generatedResult;
@@ -78,6 +80,62 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
   // AI Visual Material Generation State
   const [generatingVisualId, setGeneratingVisualId] = useState<string | null>(null);
+
+  // AI Verification State & Handlers
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verifyingWorksheet, setVerifyingWorksheet] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<WorksheetVerificationResult | null>(null);
+  const [regeneratingWithTeacherRequest, setRegeneratingWithTeacherRequest] = useState(false);
+
+  const handleRunAiVerification = async () => {
+    setShowVerificationModal(true);
+    setVerifyingWorksheet(true);
+    try {
+      const origText = state.sourceText || state.materialFile?.extractedText || state.topic || '';
+      const res = await defaultAiProvider.verifyWorksheetAgainstOriginal!({
+        originalText: origText,
+        worksheetContent: currentLatestContent
+      });
+      setVerificationResult(res);
+    } catch (err) {
+      onShowToast('error', '점검 실패', 'AI 원문-학습지 점검 수행 중 오류가 발생했습니다.');
+    } finally {
+      setVerifyingWorksheet(false);
+    }
+  };
+
+  const handleApplySuggestionsToWorksheet = (suggestionsText: string) => {
+    setEditedContent(prev => `${prev}\n\n💡 **[AI 점검 보완]** ${suggestionsText}`);
+    onShowToast('success', '✓ AI 제안 반영 완료', '점검에서 제안된 보완사항이 학습지 본문에 추가되었습니다.');
+    setShowVerificationModal(false);
+  };
+
+  const handleApplyTeacherCustomRequest = async () => {
+    if (!state.teacherRequest && !state.mustKeepText) {
+      onShowToast('info', '교사 추가 지침 입력 필요', '교사 추가 요청사항을 입력해 주세요.');
+      return;
+    }
+    setRegeneratingWithTeacherRequest(true);
+    try {
+      const regenerated = await defaultAiProvider.generateMaterial({
+        ...state,
+        educationalNeeds: state.primaryNeeds,
+        teacherRequest: state.teacherRequest
+      });
+      setEditedTitle(regenerated.title);
+      setEditedConcept(regenerated.coreConcept);
+      setEditedKeywords(regenerated.keywords || []);
+      setEditedContent(regenerated.simplifiedContent);
+      setEditedActivities(regenerated.activities || []);
+      setEditedTeacherNote(regenerated.teacherNote || '');
+      updateGeneratedContent(regenerated);
+      onShowToast('success', '✓ 교사 지침 반영 AI 재구성 완료', '작성하신 지침이 반영되어 학습지가 실시간으로 재구성되었습니다.');
+    } catch (err) {
+      onShowToast('error', '재구성 실패', 'AI 재구성 도중 오류가 발생했습니다.');
+    } finally {
+      setRegeneratingWithTeacherRequest(false);
+    }
+  };
 
   // Listen for ESC key to close Left Side Drawer
   useEffect(() => {
@@ -534,6 +592,17 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
             </button>
           </Tooltip>
 
+          <Tooltip content="선생님이 저장하기 전에 Gemini AI가 원문 자료와 학습지 내용의 팩트 및 오류가 있는지 1:1 대조 점검합니다." position="bottom">
+            <button
+              onClick={handleRunAiVerification}
+              disabled={verifyingWorksheet}
+              className="btn-ai px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-2xs"
+            >
+              <ShieldCheck className="w-4 h-4 text-forest-200" />
+              <span>{verifyingWorksheet ? 'AI 점검 중...' : '🔍 AI로 원문-학습지 점검하기'}</span>
+            </button>
+          </Tooltip>
+
           <Tooltip content="현재 학습자료 및 교사 수정 내역을 내 보관함에 최종 저장합니다." position="bottom">
             <button
               onClick={handleSave}
@@ -651,20 +720,39 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
 
           {/* Right Column: Direct Editing Panel (7/12 cols on lg, 8/12 on xl) */}
           <div className="lg:col-span-7 xl:col-span-8 card p-5 space-y-5 shadow-sm lg:sticky lg:top-24 max-h-[880px] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <span className="text-xs font-bold text-charcoal flex items-center gap-1.5">
-                <Edit3 className="w-4 h-4 text-brown-600" />
-                <span>교사 세부 내용 직접 편집</span>
-              </span>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="btn-primary px-3.5 py-1.5 text-xs font-extrabold"
-              >
-                <BookmarkPlus className="w-3.5 h-3.5" />
-                <span>{saving ? '임시저장 중...' : '임시저장'}</span>
-              </button>
+            {/* Teacher Custom Instruction Direct API Integration Box */}
+            <div className="p-3.5 rounded-xl bg-forest-50/70 border border-forest-200 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-forest-900">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-forest-600" />
+                  <span>교사 세부 요청사항 (API 직접 연동)</span>
+                </span>
+                <span className="text-[10px] text-forest-700 bg-white px-2 py-0.5 rounded font-mono font-semibold border border-forest-200">
+                  Gemini AI 연결
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={state.teacherRequest || ''}
+                  onChange={(e) => setTeacherRequest(e.target.value)}
+                  placeholder="예: 불꽃 축제의 295억 원 경제 효과를 더 강조해서 3개 단락으로 정리해주세요."
+                  className="input-field px-3 py-2 text-xs flex-1 bg-white font-sans"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleApplyTeacherCustomRequest();
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyTeacherCustomRequest}
+                  disabled={regeneratingWithTeacherRequest}
+                  className="btn-ai px-3 py-2 text-xs font-extrabold shrink-0 flex items-center gap-1 shadow-2xs"
+                  title="교사 추가 요청사항을 반영하여 AI로 학습지 전체 재구성"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${regeneratingWithTeacherRequest ? 'animate-spin' : ''}`} />
+                  <span>{regeneratingWithTeacherRequest ? '재구성 중...' : '요청 반영 전체 재구성'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Field 1: 자료 제목 */}
@@ -1109,21 +1197,44 @@ export const MaterialResultView: React.FC<MaterialResultViewProps> = ({
               />
             </div>
 
-            {/* Save Button */}
-            <div className="pt-3">
+            {/* Action Buttons: [🔍 AI로 원문-학습지 점검하기] & [내 자료에 최종 저장하기] */}
+            <div className="pt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleRunAiVerification}
+                disabled={verifyingWorksheet}
+                className="btn-ai py-3 px-4 text-xs font-extrabold flex items-center justify-center gap-2 shadow-2xs"
+              >
+                <ShieldCheck className="w-4 h-4 text-forest-200" />
+                <span>{verifyingWorksheet ? 'AI 점검 중...' : '🔍 AI로 원문-학습지 점검하기'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="btn-primary w-full py-3 px-4 text-xs sm:text-sm"
+                className="btn-primary py-3 px-4 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2"
               >
                 <BookmarkPlus className="w-4 h-4" />
-                <span>수정 내역 내 자료에 최종 저장하기</span>
+                <span>{saving ? '저장 중...' : '수정 내역 내 자료에 최종 저장하기'}</span>
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* AI Verification Modal */}
+      <AiVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        loading={verifyingWorksheet}
+        result={verificationResult}
+        onApplySuggestions={handleApplySuggestionsToWorksheet}
+        onProceedSave={() => {
+          setShowVerificationModal(false);
+          handleSave();
+        }}
+      />
 
       {/* Independent Floating Reference Window (Non-blocking, Draggable, Resizable, Persistent) */}
       <FloatingReferenceWindow

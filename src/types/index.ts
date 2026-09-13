@@ -144,6 +144,33 @@ export interface VisualSuggestion {
   visualStyle?: VisualFormatStyle;
 }
 
+export interface WorksheetVerificationInput {
+  originalText: string;
+  worksheetContent: {
+    title: string;
+    coreConcept?: string;
+    simplifiedContent?: string;
+    keywords?: string[];
+    summaryNote?: string;
+    teacherNote?: string;
+    activities?: MaterialActivity[];
+  };
+}
+
+export interface VerificationFinding {
+  type: 'correct' | 'warning' | 'error';
+  category: '팩트 검증' | '핵심 개념 누락' | '수준 및 맞춤법';
+  message: string;
+  suggestion?: string;
+}
+
+export interface WorksheetVerificationResult {
+  status: 'all_good' | 'issues_found';
+  score: number;
+  summary: string;
+  findings: VerificationFinding[];
+}
+
 export interface GeneratedVisual {
   id: string;
   suggestionId?: string;

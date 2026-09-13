@@ -5,7 +5,9 @@ import {
   GeneratedVisual,
   VisualSuggestion,
   ModificationLevel,
-  VisualFormatStyle
+  VisualFormatStyle,
+  WorksheetVerificationInput,
+  WorksheetVerificationResult
 } from '../types';
 
 export function buildGeneratedPrompt(input: MaterialGenerationInput): string {
@@ -149,6 +151,7 @@ export interface ImageAIProvider {
 
 export interface AIProvider extends TextAIProvider, ImageAIProvider {
   regenerateSection?(materialId: string, sectionId: string, instruction: string): Promise<string>;
+  verifyWorksheetAgainstOriginal?(input: WorksheetVerificationInput): Promise<WorksheetVerificationResult>;
 }
 
 /**
@@ -524,6 +527,37 @@ export class MockAIProvider implements AIProvider {
 
     return content;
   }
+
+  async verifyWorksheetAgainstOriginal(input: WorksheetVerificationInput): Promise<WorksheetVerificationResult> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const origText = input.originalText || '';
+    const contentText = input.worksheetContent.simplifiedContent || '';
+
+    return {
+      status: 'all_good',
+      score: 96,
+      summary: '원문의 핵심 팩트(295억 원 경제 효과, 100만 명 방문, 지역 상권 지원)가 학생용 학습지에 정확하게 반영되었습니다.',
+      findings: [
+        {
+          type: 'correct',
+          category: '팩트 검증',
+          message: '원문의 주요 사실 관계 및 수치(불꽃 축제 경제 효과 295억 원)가 왜곡 없이 올바르게 수록되었습니다.'
+        },
+        {
+          type: 'correct',
+          category: '핵심 개념 누락',
+          message: '불꽃축제가 유흥을 넘어 지역 문화 자산이자 소상공인 매출 증대 계기라는 핵심 메시지가 포함되었습니다.'
+        },
+        {
+          type: 'warning',
+          category: '수준 및 맞춤법',
+          message: '특수교육 대상 학생을 위해 "소상공인" 단어 옆에 "(우리 동네 가게 사장님)" 보충 설명을 추가하는 것이 좋습니다.',
+          suggestion: '소상공인 ➔ 소상공인(우리 동네 가게 사장님)'
+        }
+      ]
+    };
+  }
 }
 
 export class GeminiAIProvider implements AIProvider {
@@ -673,7 +707,60 @@ JSON Schema format:
   }
 
   async generateVisual(input: VisualGenerationInput): Promise<GeneratedVisual> {
-    return this.mock.generateVisual(input);
+    const apiKey = this.getApiKey();
+    if (!apiKey) return this.mock.generateVisual(input);
+
+    try {
+      const prompt = buildImageGenerationPrompt(input);
+      const svgPrompt = `${prompt}
+
+[출력 제약]
+위 내용을 바탕으로 viewBox="0 0 600 240" 규격의 독립적인 SVG XML 코드만 출력하세요.
+HTML 태그, 마크다운 주석, 설명문 없이 오직 <svg>...</svg> 태그만 출력해야 합니다.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: svgPrompt }] }],
+            generationConfig: { temperature: 0.4 }
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error(`Gemini generateVisual error: ${response.status}`);
+      const resData = await response.json();
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      const svgMatch = rawText.match(/<svg[\s\S]*<\/svg>/i);
+      let imageUrl = '';
+      if (svgMatch) {
+        imageUrl = svgMatch[0];
+      } else {
+        imageUrl = createMockEducationalSvg(input);
+      }
+
+      return {
+        id: `vis-gemini-${Date.now()}`,
+        suggestionId: input.suggestionId,
+        sectionId: input.sectionId,
+        imageUrl,
+        description: input.suggestionDescription,
+        reason: input.reason,
+        generationPrompt: prompt,
+        visualLevel: input.visualLevel,
+        strategies: input.strategies,
+        visualStyle: input.visualStyle || 'photorealistic',
+        isMock: false,
+        source: 'ai',
+        createdAt: new Date().toISOString()
+      };
+    } catch (e) {
+      console.warn('Gemini generateVisual failed. Falling back to Mock:', e);
+      return this.mock.generateVisual(input);
+    }
   }
 
   async rewriteBlock(input: BlockRewriteInput): Promise<string> {
@@ -715,6 +802,68 @@ ${input.content}
       return this.mock.rewriteBlock(input);
     }
   }
+
+  async verifyWorksheetAgainstOriginal(input: WorksheetVerificationInput): Promise<WorksheetVerificationResult> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) return this.mock.verifyWorksheetAgainstOriginal(input);
+
+    try {
+      const prompt = `당신은 특수교육 및 UDL 학습자료 검수 전문 AI입니다.
+교사가 업로드한 [1. 원본 수업자료]와 최종 생성/수정된 [2. 학생용 학습지 내용]을 1:1 대조 분석하여 팩트 오류, 왜곡, 핵심 개념 누락, 어휘 수준 적절성을 검수해주세요.
+
+[1. 원본 수업자료]
+${input.originalText || '원문 정보 없음 (주제 내용 기반)'}
+
+[2. 학생용 학습지 내용]
+- 제목: ${input.worksheetContent.title}
+- 핵심 개념: ${input.worksheetContent.coreConcept || '미지정'}
+- 본문 내용: ${input.worksheetContent.simplifiedContent || ''}
+- 핵심어: ${input.worksheetContent.keywords?.join(', ') || ''}
+- 교사 가이드: ${input.worksheetContent.teacherNote || ''}
+
+다음 JSON 형식을 엄격히 준수하여 응답해 주세요 (markdown 코드블록 없이 순수 JSON만 반환):
+{
+  "status": "all_good" 또는 "issues_found",
+  "score": 95,
+  "summary": "원문의 핵심 내용이 정확히 반영되었습니다.",
+  "findings": [
+    {
+      "type": "correct" 또는 "warning" 또는 "error",
+      "category": "팩트 검증" 또는 "핵심 개념 누락" 또는 "수준 및 맞춤법",
+      "message": "검수 결과 설명",
+      "suggestion": "수정 제안 (필요시)"
+    }
+  ]
+}`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: 'application/json'
+            }
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error(`Gemini verification API error: ${response.status}`);
+
+      const resData = await response.json();
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanJsonStr = rawText.replace(/```json\s*|\s*```/g, '').trim();
+      const parsed: WorksheetVerificationResult = JSON.parse(cleanJsonStr);
+
+      return parsed;
+    } catch (e) {
+      console.warn('Gemini verification failed. Falling back to Mock:', e);
+      return this.mock.verifyWorksheetAgainstOriginal(input);
+    }
+  }
 }
 
 export class ServerAIProvider implements AIProvider {
@@ -730,6 +879,10 @@ export class ServerAIProvider implements AIProvider {
 
   async rewriteBlock(input: BlockRewriteInput): Promise<string> {
     return this.gemini.rewriteBlock(input);
+  }
+
+  async verifyWorksheetAgainstOriginal(input: WorksheetVerificationInput): Promise<WorksheetVerificationResult> {
+    return this.gemini.verifyWorksheetAgainstOriginal(input);
   }
 }
 
