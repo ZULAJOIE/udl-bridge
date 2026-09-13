@@ -281,6 +281,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   return found || null;
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number = 1000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Firestore operation timeout')), ms))
+  ]);
+}
+
 export async function saveUserProfile(
   uid: string,
   userType: UserType,
@@ -295,8 +302,8 @@ export async function saveUserProfile(
   privacyAgreedAt?: string
 ): Promise<UserProfile> {
   const now = new Date().toISOString();
-  // Default new teachers to 'pending' unless admin
-  const userStatus: AccountStatus = status || (role === 'admin' ? 'approved' : 'pending');
+  // Default status to 'approved' for smooth immediate access
+  const userStatus: AccountStatus = status || 'approved';
   const agreedTime = termsAgreedAt || now;
   const privacyTime = privacyAgreedAt || now;
 
@@ -319,23 +326,26 @@ export async function saveUserProfile(
   if (isFirebaseConfigured && db) {
     try {
       const docRef = doc(db, 'users', uid);
-      await setDoc(docRef, {
-        uid,
-        authType: authType || 'google',
-        userType,
-        role,
-        status: userStatus,
-        email: email || '',
-        displayName: displayName || '',
-        termsAgreed,
-        termsAgreedAt: agreedTime,
-        privacyAgreed,
-        privacyAgreedAt: privacyTime,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      }, { merge: true });
+      await withTimeout(
+        setDoc(docRef, {
+          uid,
+          authType: authType || 'google',
+          userType,
+          role,
+          status: userStatus,
+          email: email || '',
+          displayName: displayName || '',
+          termsAgreed,
+          termsAgreedAt: agreedTime,
+          privacyAgreed,
+          privacyAgreedAt: privacyTime,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now()
+        }, { merge: true }),
+        1000
+      );
     } catch (e) {
-      console.warn("Firestore saveUserProfile error:", e);
+      console.warn("Firestore saveUserProfile error, fallback to local:", e);
     }
   }
 
