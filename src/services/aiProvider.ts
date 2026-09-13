@@ -710,13 +710,60 @@ JSON Schema format:
     const apiKey = this.getApiKey();
     if (!apiKey) return this.mock.generateVisual(input);
 
-    try {
-      const prompt = buildImageGenerationPrompt(input);
-      const svgPrompt = `${prompt}
+    const prompt = buildImageGenerationPrompt(input);
 
-[출력 제약]
-위 내용을 바탕으로 viewBox="0 0 600 240" 규격의 독립적인 SVG XML 코드만 출력하세요.
-HTML 태그, 마크다운 주석, 설명문 없이 오직 <svg>...</svg> 태그만 출력해야 합니다.`;
+    // 1. Primary Attempt: Google Imagen 3 API (imagen-3.0-generate-002)
+    try {
+      const imagenResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            instances: [
+              {
+                prompt: `${input.topic} - ${input.suggestionTitle}. ${input.suggestionDescription}. Style: ${input.visualStyle}. ${input.teacherCustomPrompt || ''}`
+              }
+            ],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: '16:9'
+            }
+          })
+        }
+      );
+
+      if (imagenResponse.ok) {
+        const imagenData = await imagenResponse.json();
+        const b64 = imagenData.predictions?.[0]?.bytesBase64Encoded;
+        const mime = imagenData.predictions?.[0]?.mimeType || 'image/png';
+
+        if (b64) {
+          const imageUrl = `data:${mime};base64,${b64}`;
+          return {
+            id: `vis-imagen-${Date.now()}`,
+            suggestionId: input.suggestionId,
+            sectionId: input.sectionId,
+            imageUrl,
+            description: input.suggestionDescription,
+            reason: input.reason,
+            generationPrompt: prompt,
+            visualLevel: input.visualLevel,
+            strategies: input.strategies,
+            visualStyle: input.visualStyle || 'photorealistic',
+            isMock: false,
+            source: 'ai',
+            createdAt: new Date().toISOString()
+          };
+        }
+      }
+    } catch (imagenErr) {
+      console.warn('Imagen 3 API request failed. Trying Gemini SVG fallback:', imagenErr);
+    }
+
+    // 2. Secondary Fallback: Gemini Flash SVG Generation
+    try {
+      const svgPrompt = `${prompt}\n\n[출력 제약]\n위 내용을 바탕으로 viewBox="0 0 600 240" 규격의 독립적인 SVG XML 코드만 출력하세요.\nHTML 태그, 마크다운 주석, 설명문 없이 오직 <svg>...</svg> 태그만 출력해야 합니다.`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
